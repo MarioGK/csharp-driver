@@ -15,25 +15,24 @@
 //
 
 using System.Collections.Generic;
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace Cassandra.DataStax.Cloud
 {
-    [JsonObject]
     internal class ContactInfo
     {
-        [JsonProperty("type")]
+        [JsonPropertyName("type")]
         public string Type { get; set; }
 
-        [JsonProperty("local_dc")]
+        [JsonPropertyName("local_dc")]
         public string LocalDc { get; set; }
 
         [JsonRequired]
-        [JsonProperty("contact_points")]
+        [JsonPropertyName("contact_points")]
         public List<string> ContactPoints { get; set; }
         
         [JsonRequired]
-        [JsonProperty("sni_proxy_address")]
+        [JsonPropertyName("sni_proxy_address")]
         public string SniProxyAddress { get; set; }
     }
 }

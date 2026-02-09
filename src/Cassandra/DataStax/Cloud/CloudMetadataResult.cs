@@ -14,18 +14,17 @@
 //   limitations under the License.
 //
 
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace Cassandra.DataStax.Cloud
 {
-    [JsonObject]
     internal class CloudMetadataResult
     {
-        [JsonProperty("region")]
+        [JsonPropertyName("region")]
         public string Region { get; set; }
 
         [JsonRequired]
-        [JsonProperty("contact_info")]
+        [JsonPropertyName("contact_info")]
         public ContactInfo ContactInfo { get; set; }
     }
 }

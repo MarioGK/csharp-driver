@@ -20,7 +20,7 @@ using System.Net;
 using System.Security.Authentication;
 using System.Threading.Tasks;
 using Cassandra.Helpers;
-using Newtonsoft.Json;
+using System.Text.Json;
 #if NETSTANDARD
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -79,7 +79,7 @@ namespace Cassandra.DataStax.Cloud
 
                     try
                     {
-                        return JsonConvert.DeserializeObject<CloudMetadataResult>(responseString);
+                        return JsonSerializer.Deserialize<CloudMetadataResult>(responseString);
                     }
                     catch (Exception ex)
                     {
@@ -154,7 +154,7 @@ namespace Cassandra.DataStax.Cloud
 
                     try
                     {
-                        return JsonConvert.DeserializeObject<CloudMetadataResult>(body);
+                        return JsonSerializer.Deserialize<CloudMetadataResult>(body);
                     }
                     catch (Exception ex2)
                     {

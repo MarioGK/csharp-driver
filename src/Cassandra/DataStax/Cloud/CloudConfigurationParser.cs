@@ -16,7 +16,7 @@
 
 using System;
 using System.IO;
-using Newtonsoft.Json;
+using System.Text.Json;
 
 namespace Cassandra.DataStax.Cloud
 {
@@ -32,7 +32,7 @@ namespace Cassandra.DataStax.Cloud
             using (var configStream = new StreamReader(stream))
             {
                 var json = configStream.ReadToEnd();
-                cloudConfiguration = JsonConvert.DeserializeObject<CloudConfiguration>(json);
+                cloudConfiguration = JsonSerializer.Deserialize<CloudConfiguration>(json);
             }
 
             ValidateConfiguration(cloudConfiguration);
