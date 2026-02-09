@@ -23,8 +23,6 @@
 //  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 
-using System.Runtime.ConstrainedExecution;
-
 namespace Cassandra.DataStax.Auth.Sspi.Credentials
 {
     /// <summary>
@@ -36,7 +34,6 @@ namespace Cassandra.DataStax.Auth.Sspi.Credentials
             : base()
         { }
 
-        [ReliabilityContract( Consistency.WillNotCorruptState, Cer.Success )]
         protected override bool ReleaseHandle()
         {
             SecurityStatus status = CredentialNativeMethods.FreeCredentialsHandle(
