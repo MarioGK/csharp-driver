@@ -20,11 +20,12 @@ using System.Dynamic;
 using System.Linq;
 using System.Runtime.Serialization;
 
+using System.Text.Json;
+using System.Text.Json.Nodes;
+using System.Text.Json.Serialization;
+
 using Cassandra.Serialization.Graph;
 using Cassandra.Serialization.Graph.GraphSON1;
-
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace Cassandra.DataStax.Graph
 {
@@ -83,21 +84,10 @@ namespace Cassandra.DataStax.Graph
         /// </summary>
         protected GraphNode(SerializationInfo info, StreamingContext context)
         {
-            var objectTree = new JObject();
+            var objectTree = new JsonObject();
             foreach (var field in info)
             {
-                if (field.Value is JToken)
-                {
-                    objectTree.Add(field.Name, (JToken)field.Value);
-                    continue;
-                }
-                if (field.Value is IEnumerable<object>)
-                {
-                    var values = (IEnumerable<object>)field.Value;
-                    objectTree.Add(field.Name, new JArray(values.ToArray()));
-                    continue;
-                }
-                objectTree.Add(field.Name, new JValue(field.Value));
+                objectTree[field.Name] = GraphSON1Node.ConvertToJsonNode(field.Value);
             }
             if (objectTree["@type"] != null)
             {
@@ -110,7 +100,7 @@ namespace Cassandra.DataStax.Graph
             }
         }
 
-        internal GraphNode(JObject objectTree)
+        internal GraphNode(JsonObject objectTree)
         {
             if (objectTree["@type"] != null)
             {
@@ -340,9 +330,9 @@ namespace Cassandra.DataStax.Graph
         /// </summary>
         public Vertex ToVertex() => To<Vertex>();
 
-        internal void WriteJson(JsonWriter writer, JsonSerializer serializer)
+        internal void WriteJson(Utf8JsonWriter writer, JsonSerializerOptions options)
         {
-            _node.WriteJson(writer, serializer);
+            _node.WriteJson(writer, options);
         }
 
         /// <summary>

@@ -126,7 +126,13 @@ namespace Cassandra.Serialization.Graph.GraphSON1
 
         private static void WriteGraphNode(JsonWriter writer, object value, JsonSerializer serializer)
         {
-            ((GraphNode)value).WriteJson(writer, serializer);
+            var graphNode = (GraphNode)value;
+            if (!graphNode.IsObjectTree)
+            {
+                throw new NotSupportedException(
+                    "Deserialization of GraphNodes that don't represent object trees is not supported");
+            }
+            serializer.Serialize(writer, graphNode.GetRaw());
         }
 
         private static void WriteDuration(JsonWriter writer, object value, JsonSerializer serializer)

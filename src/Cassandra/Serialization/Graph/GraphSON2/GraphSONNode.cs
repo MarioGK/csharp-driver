@@ -26,6 +26,8 @@ using Cassandra.DataStax.Graph;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
+using System.Text.Json;
+
 namespace Cassandra.Serialization.Graph.GraphSON2
 {
     internal class GraphSONNode : INode
@@ -281,7 +283,7 @@ namespace Cassandra.Serialization.Graph.GraphSON2
             }
         }
 
-        public void WriteJson(JsonWriter writer, JsonSerializer serializer)
+        public void WriteJson(Utf8JsonWriter writer, JsonSerializerOptions options)
         {
             throw new NotSupportedException("Serializing GraphNodes in GraphSON2/GraphSON3 to JSON is not supported.");
         }

@@ -14,26 +14,23 @@
 //    limitations under the License.
 
 using System;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+using System.Text.Json;
+using System.Text.Json.Nodes;
+using System.Text.Json.Serialization;
 
 namespace Cassandra.DataStax.Graph
 {
-    internal class GraphNodeConverter : JsonConverter
+    internal class GraphNodeConverter : JsonConverter<GraphNode>
     {
-        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+        public override void Write(Utf8JsonWriter writer, GraphNode value, JsonSerializerOptions options)
         {
-            ((GraphNode)value).WriteJson(writer, serializer);
+            value.WriteJson(writer, options);
         }
 
-        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+        public override GraphNode Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
-            return new GraphNode(JObject.Load(reader));
-        }
-
-        public override bool CanConvert(Type objectType)
-        {
-            return objectType == typeof(GraphNode);
+            var jsonObject = JsonNode.Parse(ref reader)?.AsObject();
+            return new GraphNode(jsonObject);
         }
     }
 }

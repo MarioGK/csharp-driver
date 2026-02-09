@@ -27,6 +27,9 @@ using Cassandra.DataStax.Graph;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
+using System.Text.Json;
+using System.Text.Json.Nodes;
+
 namespace Cassandra.Serialization.Graph.GraphSON1
 {
     internal class GraphSON1Node : INode
@@ -79,6 +82,36 @@ namespace Cassandra.Serialization.Graph.GraphSON1
         internal static GraphSON1Node CreateParsedNode(JToken parsedGraphItem)
         {
             return new GraphSON1Node(parsedGraphItem);
+        }
+
+        internal static GraphSON1Node CreateParsedNode(JsonNode parsedGraphItem)
+        {
+            if (parsedGraphItem == null)
+            {
+                throw new ArgumentNullException(nameof(parsedGraphItem));
+            }
+            var jToken = JToken.Parse(parsedGraphItem.ToJsonString());
+            return new GraphSON1Node(jToken);
+        }
+
+        internal static JsonNode ConvertToJsonNode(object value)
+        {
+            if (value == null) return null;
+            if (value is JsonNode node) return node;
+            if (value is JToken jToken)
+            {
+                return JsonNode.Parse(jToken.ToString(Formatting.None));
+            }
+            if (value is IEnumerable<object> enumerable)
+            {
+                var arr = new JsonArray();
+                foreach (var item in enumerable)
+                {
+                    arr.Add(ConvertToJsonNode(item));
+                }
+                return arr;
+            }
+            return System.Text.Json.JsonSerializer.SerializeToNode(value);
         }
 
         public T Get<T>(string propertyName, bool throwIfNotFound)
@@ -343,14 +376,16 @@ namespace Cassandra.Serialization.Graph.GraphSON1
             return _token.ToString();
         }
 
-        public void WriteJson(JsonWriter writer, JsonSerializer serializer)
+        public void WriteJson(Utf8JsonWriter writer, JsonSerializerOptions options)
         {
             if (!IsObjectTree)
             {
                 throw new NotSupportedException(
                     "Deserialization of GraphNodes that don't represent object trees is not supported");
             }
-            serializer.Serialize(writer, _token);
+            var json = _token.ToString(Formatting.None);
+            using var doc = JsonDocument.Parse(json);
+            doc.RootElement.WriteTo(writer);
         }
     }
 }
