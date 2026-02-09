@@ -16,7 +16,8 @@
 
 using System;
 using System.Collections.Generic;
-using Newtonsoft.Json;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace Cassandra.DataStax.Insights.Schema.Converters
 {
@@ -25,7 +26,7 @@ namespace Cassandra.DataStax.Insights.Schema.Converters
     /// </summary>
     /// <typeparam name="TEnumType">Type of objects that this converter can convert.</typeparam>
     /// <typeparam name="TJsonType">Type of objects that will be created by this converter.</typeparam>
-    internal abstract class InsightsEnumConverter<TEnumType, TJsonType> : JsonConverter
+    internal abstract class InsightsEnumConverter<TEnumType, TJsonType> : JsonConverter<TEnumType>
     {
         private static readonly string TypeString = typeof(TEnumType).ToString();
         private static readonly Logger Logger = new Logger(typeof(InsightsEnumConverter<TEnumType, TJsonType>));
@@ -51,41 +52,29 @@ namespace Cassandra.DataStax.Insights.Schema.Converters
         }
 
         /// <summary>Writes the JSON representation of the object.</summary>
-        /// <param name="writer">The <see cref="Newtonsoft.Json.JsonWriter" /> to write to.</param>
+        /// <param name="writer">The <see cref="System.Text.Json.Utf8JsonWriter" /> to write to.</param>
         /// <param name="value">The value.</param>
-        /// <param name="serializer">The calling serializer.</param>
-        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+        /// <param name="options">The serializer options.</param>
+        public override void Write(Utf8JsonWriter writer, TEnumType value, JsonSerializerOptions options)
         {
-            if (value == null)
+            if (!TryConvert(value, out var enumValueJsonValue))
             {
-                writer.WriteNull();
+                InsightsEnumConverter<TEnumType, TJsonType>.Logger.Error($"Unrecognized value for type { InsightsEnumConverter<TEnumType, TJsonType>.TypeString }.");
+                writer.WriteNullValue();
                 return;
             }
 
-            var enumValue = (TEnumType)value;
-            if (!TryConvert(enumValue, out var enumValueJsonValue))
-            {
-                InsightsEnumConverter<TEnumType, TJsonType>.Logger.Error($"Unrecognized value for type { InsightsEnumConverter<TEnumType, TJsonType>.TypeString }.");
-                writer.WriteNull();
-                return;
-            }
-            
-            writer.WriteValue(enumValueJsonValue);
+            JsonSerializer.Serialize(writer, enumValueJsonValue, options);
         }
 
         /// <summary>Reads the JSON representation of the object.</summary>
-        /// <param name="reader">The <see cref="Newtonsoft.Json.JsonReader" /> to read from.</param>
-        /// <param name="objectType">Type of the object.</param>
-        /// <param name="existingValue">The existing value of object being read.</param>
-        /// <param name="serializer">The calling serializer.</param>
+        /// <param name="reader">The <see cref="System.Text.Json.Utf8JsonReader" /> to read from.</param>
+        /// <param name="typeToConvert">Type of the object.</param>
+        /// <param name="options">The serializer options.</param>
         /// <returns>The object value.</returns>
-        public override object ReadJson(
-            JsonReader reader,
-            Type objectType,
-            object existingValue,
-            JsonSerializer serializer)
+        public override TEnumType Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
-            var existingValueJson = (TJsonType)Convert.ChangeType(reader.Value, typeof(TJsonType));
+            var existingValueJson = JsonSerializer.Deserialize<TJsonType>(ref reader, options);
 
             foreach (var kvp in EnumToJsonValueMap)
             {
@@ -96,18 +85,6 @@ namespace Cassandra.DataStax.Insights.Schema.Converters
             }
 
             throw new ArgumentException($"could not convert {existingValueJson} to {InsightsEnumConverter<TEnumType, TJsonType>.TypeString}");
-        }
-
-        /// <summary>
-        /// Determines whether this instance can convert the specified object type.
-        /// </summary>
-        /// <param name="objectType">Type of the object.</param>
-        /// <returns>
-        /// <c>true</c> if this instance can convert the specified object type; otherwise, <c>false</c>.
-        /// </returns>
-        public override bool CanConvert(Type objectType)
-        {
-            return objectType == typeof(TEnumType);
         }
     }
 }

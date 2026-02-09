@@ -14,20 +14,19 @@
 //   limitations under the License.
 //
 
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace Cassandra.DataStax.Insights.Schema.StartupMessage
 {
-    [JsonObject]
     internal class AssemblyInfo
     {
-        [JsonProperty("fullName")]
+        [JsonPropertyName("fullName")]
         public string FullName { get; set; }
 
-        [JsonProperty("name")]
+        [JsonPropertyName("name")]
         public string Name { get; set; }
 
-        [JsonProperty("version")]
+        [JsonPropertyName("version")]
         public string Version { get; set; }
     }
 }

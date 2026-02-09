@@ -23,7 +23,8 @@ using Cassandra.DataStax.Insights.Schema.StatusMessage;
 using Cassandra.Responses;
 using Cassandra.SessionManagement;
 using Cassandra.Tasks;
-using Newtonsoft.Json;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace Cassandra.DataStax.Insights
 {
@@ -182,7 +183,7 @@ namespace Cassandra.DataStax.Insights
         {
             var queryProtocolOptions = new QueryProtocolOptions(
                 ConsistencyLevel.One,
-                new object[] { JsonConvert.SerializeObject(message, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore }) },
+                new object[] { JsonSerializer.Serialize(message, new JsonSerializerOptions { DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull }) },
                 false,
                 0,
                 null,

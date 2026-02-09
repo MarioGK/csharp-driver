@@ -15,23 +15,22 @@
 // 
 
 using System.Collections.Generic;
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace Cassandra.DataStax.Insights.Schema.StatusMessage
 {
-    [JsonObject]
     internal class InsightsStatusData
     {
-        [JsonProperty("clientId")]
+        [JsonPropertyName("clientId")]
         public string ClientId { get; set; }
 
-        [JsonProperty("sessionId")]
+        [JsonPropertyName("sessionId")]
         public string SessionId { get; set; }
         
-        [JsonProperty("controlConnection")]
+        [JsonPropertyName("controlConnection")]
         public string ControlConnection { get; set; }
 
-        [JsonProperty("connectedNodes")]
+        [JsonPropertyName("connectedNodes")]
         public Dictionary<string, NodeStatusInfo> ConnectedNodes { get; set; }
     }
 }

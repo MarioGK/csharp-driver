@@ -16,84 +16,83 @@
 
 using System.Collections.Generic;
 using Cassandra.DataStax.Insights.Schema.Converters;
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace Cassandra.DataStax.Insights.Schema.StartupMessage
 {
-    [JsonObject]
     internal class InsightsStartupData
     {
-        [JsonProperty("clientId")]
+        [JsonPropertyName("clientId")]
         public string ClientId { get; set; }
 
-        [JsonProperty("sessionId")]
+        [JsonPropertyName("sessionId")]
         public string SessionId { get; set; }
 
-        [JsonProperty("applicationName")]
+        [JsonPropertyName("applicationName")]
         public string ApplicationName { get; set; }
 
-        [JsonProperty("applicationVersion")]
+        [JsonPropertyName("applicationVersion")]
         public string ApplicationVersion { get; set; }
 
-        [JsonProperty("contactPoints")]
+        [JsonPropertyName("contactPoints")]
         public Dictionary<string, List<string>> ContactPoints { get; set; }
 
-        [JsonProperty("initialControlConnection")]
+        [JsonPropertyName("initialControlConnection")]
         public string InitialControlConnection { get; set; }
 
-        [JsonProperty("protocolVersion")]
+        [JsonPropertyName("protocolVersion")]
         public byte ProtocolVersion { get; set; }
 
-        [JsonProperty("localAddress")]
+        [JsonPropertyName("localAddress")]
         public string LocalAddress { get; set; }
 
-        [JsonProperty("executionProfiles")]
+        [JsonPropertyName("executionProfiles")]
         public Dictionary<string, ExecutionProfileInfo> ExecutionProfiles { get; set; }
 
-        [JsonProperty("poolSizeByHostDistance")]
+        [JsonPropertyName("poolSizeByHostDistance")]
         public PoolSizeByHostDistance PoolSizeByHostDistance { get; set; }
 
-        [JsonProperty("heartbeatInterval")]
+        [JsonPropertyName("heartbeatInterval")]
         public long HeartbeatInterval { get; set; }
 
-        [JsonProperty("compression")]
+        [JsonPropertyName("compression")]
         [JsonConverter(typeof(CompressionTypeInsightsConverter))]
         public CompressionType Compression { get; set; }
 
-        [JsonProperty("reconnectionPolicy")]
+        [JsonPropertyName("reconnectionPolicy")]
         public PolicyInfo ReconnectionPolicy { get; set; }
 
-        [JsonProperty("ssl")]
+        [JsonPropertyName("ssl")]
         public SslInfo Ssl { get; set; }
 
-        [JsonProperty("authProvider")]
+        [JsonPropertyName("authProvider")]
         public AuthProviderInfo AuthProvider { get; set; }
 
-        [JsonProperty("otherOptions")]
+        [JsonPropertyName("otherOptions")]
         public Dictionary<string, object> OtherOptions { get; set; }
 
-        [JsonProperty("configAntiPatterns")]
+        [JsonPropertyName("configAntiPatterns")]
         public Dictionary<string, string> ConfigAntiPatterns { get; set; }
 
-        [JsonProperty("periodicStatusInterval")]
+        [JsonPropertyName("periodicStatusInterval")]
         public long PeriodicStatusInterval { get; set; }
 
-        [JsonProperty("platformInfo")]
+        [JsonPropertyName("platformInfo")]
         public InsightsPlatformInfo PlatformInfo { get; set; }
 
-        [JsonProperty("hostName")]
+        [JsonPropertyName("hostName")]
         public string HostName { get; set; }
 
-        [JsonProperty("driverName")]
+        [JsonPropertyName("driverName")]
         public string DriverName { get; set; }
 
-        [JsonProperty("applicationNameWasGenerated")]
+        [JsonPropertyName("applicationNameWasGenerated")]
         public bool ApplicationNameWasGenerated { get; set; }
 
-        [JsonProperty("driverVersion")]
+        [JsonPropertyName("driverVersion")]
         public string DriverVersion { get; set; }
 
-        [JsonProperty("dataCenters")]
+        [JsonPropertyName("dataCenters")]
         public HashSet<string> DataCenters { get; set; }
     }
 }
