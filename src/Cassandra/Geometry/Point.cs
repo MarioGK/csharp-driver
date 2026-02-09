@@ -17,9 +17,9 @@ using System;
 using System.Collections;
 using System.Globalization;
 using System.Runtime.Serialization;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace Cassandra.Geometry
 {
@@ -71,11 +71,11 @@ namespace Cassandra.Geometry
             Y = coordinates[1];
         }
 
-        internal Point(JObject obj)
+        internal Point(JsonElement obj)
         {
-            var coordinates = obj.GetValue("coordinates").ToObject<double[]>();
-            X = coordinates[0];
-            Y = coordinates[1];
+            var coordinates = obj.GetProperty("coordinates");
+            X = coordinates[0].GetDouble();
+            Y = coordinates[1].GetDouble();
         }
 
         /// <summary>

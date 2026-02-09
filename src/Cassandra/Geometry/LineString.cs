@@ -19,9 +19,9 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Runtime.Serialization;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace Cassandra.Geometry
 {
@@ -63,10 +63,16 @@ namespace Cassandra.Geometry
             Points = AsReadOnlyCollection(coordinates.Select(arr => new Point(arr[0], arr[1])).ToArray());
         }
 
-        internal LineString(JObject obj)
+        internal LineString(JsonElement obj)
         {
-            var coordinates = obj.GetValue("coordinates").ToObject<double[][]>();
-            Points = AsReadOnlyCollection(coordinates.Select(arr => new Point(arr[0], arr[1])).ToArray());
+            var coordinates = obj.GetProperty("coordinates");
+            var points = new Point[coordinates.GetArrayLength()];
+            for (var i = 0; i < points.Length; i++)
+            {
+                var arr = coordinates[i];
+                points[i] = new Point(arr[0].GetDouble(), arr[1].GetDouble());
+            }
+            Points = AsReadOnlyCollection(points);
         }
 
         /// <summary>

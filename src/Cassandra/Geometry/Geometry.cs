@@ -19,7 +19,8 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Runtime.Serialization;
-using Newtonsoft.Json;
+using System.Text;
+using System.Text.Json;
 
 namespace Cassandra.Geometry
 {
@@ -29,8 +30,6 @@ namespace Cassandra.Geometry
     [Serializable]
     public abstract class GeometryBase : ISerializable
     {
-        private static readonly JsonSerializer DefaultJsonSerializer = JsonSerializer.CreateDefault();
-
         /// <summary>
         /// Gets the type name to be used for GeoJSON serialization.
         /// </summary>
@@ -85,10 +84,12 @@ namespace Cassandra.Geometry
         /// </summary>
         public virtual string ToGeoJson()
         {
-            var stringWriter = new StringWriter();
-            var writer = new JsonTextWriter(stringWriter);
-            WriteJson(writer, DefaultJsonSerializer);
-            return stringWriter.ToString();
+            using var stream = new MemoryStream();
+            using (var writer = new Utf8JsonWriter(stream))
+            {
+                WriteJson(writer, null);
+            }
+            return Encoding.UTF8.GetString(stream.ToArray());
         }
         
         /// <inheritdoc />
@@ -98,13 +99,13 @@ namespace Cassandra.Geometry
             info.AddValue("coordinates", GeoCoordinates);
         }
 
-        internal virtual void WriteJson(JsonWriter writer, JsonSerializer serializer)
+        internal virtual void WriteJson(Utf8JsonWriter writer, JsonSerializerOptions options)
         {
             writer.WriteStartObject();
             writer.WritePropertyName("type");
-            writer.WriteValue(GeoJsonType);
+            writer.WriteStringValue(GeoJsonType);
             writer.WritePropertyName("coordinates");
-            serializer.Serialize(writer, GeoCoordinates);
+            JsonSerializer.Serialize(writer, GeoCoordinates, GeoCoordinates.GetType(), options);
             writer.WriteEndObject();
         }
 

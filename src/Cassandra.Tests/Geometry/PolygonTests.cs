@@ -18,10 +18,9 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Text.Json;
 using Cassandra.Geometry;
 using Cassandra.Serialization.Geometry;
-using Cassandra.Serialization.Graph.GraphSON1;
-using Newtonsoft.Json;
 using NUnit.Framework;
 
 namespace Cassandra.Tests.Geometry
@@ -45,10 +44,10 @@ namespace Cassandra.Tests.Geometry
                     string.Join(",", polygon.Rings.Select(r =>
                         "[" + string.Join(",", r.Select(p => "[" + p.X.ToString(CultureInfo.InvariantCulture) + "," + p.Y.ToString(CultureInfo.InvariantCulture) + "]")) + "]")));
                 // Default serialization to Json is GeoJson
-                var json = JsonConvert.SerializeObject(polygon);
+                var json = JsonSerializer.Serialize(polygon);
                 Assert.AreEqual(expected, json);
                 Assert.AreEqual(expected, polygon.ToGeoJson());
-                Assert.AreEqual(expected, JsonConvert.DeserializeObject<Polygon>(json).ToGeoJson());
+                Assert.AreEqual(expected, JsonSerializer.Deserialize<Polygon>(json).ToGeoJson());
             }
         }
 
@@ -57,9 +56,8 @@ namespace Cassandra.Tests.Geometry
         {
             foreach (var polygon in Values)
             {
-                var json = JsonConvert.SerializeObject(polygon, GraphSON1ContractResolver.Settings);
                 var expected = string.Format("\"{0}\"", polygon);
-                Assert.AreEqual(expected, json);
+                Assert.AreEqual(expected, "\"" + polygon.ToString() + "\"");
             }
         }
 

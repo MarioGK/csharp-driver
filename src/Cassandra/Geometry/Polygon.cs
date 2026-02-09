@@ -19,9 +19,9 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Runtime.Serialization;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace Cassandra.Geometry
 {
@@ -103,12 +103,22 @@ namespace Cassandra.Geometry
             _ringsWithOrderedPoints = Rings.Select(r => (IList<Point>) r.OrderBy(p => p).ToList()).ToList();
         }
         
-        internal Polygon(JObject obj)
+        internal Polygon(JsonElement obj)
         {
-            var coordinates = obj.GetValue("coordinates").ToObject<double[][][]>();
-            Rings = AsReadOnlyCollection(coordinates
-                                         .Select(r => (IList<Point>)r.Select(p => new Point(p[0], p[1])).ToList())
-                                         .ToList());
+            var coordinates = obj.GetProperty("coordinates");
+            var rings = new List<IList<Point>>();
+            for (var i = 0; i < coordinates.GetArrayLength(); i++)
+            {
+                var ring = coordinates[i];
+                var points = new Point[ring.GetArrayLength()];
+                for (var j = 0; j < points.Length; j++)
+                {
+                    var arr = ring[j];
+                    points[j] = new Point(arr[0].GetDouble(), arr[1].GetDouble());
+                }
+                rings.Add(points);
+            }
+            Rings = AsReadOnlyCollection(rings, r => AsReadOnlyCollection(r));
             _ringsWithOrderedPoints = Rings.Select(r => (IList<Point>) r.OrderBy(p => p).ToList()).ToList();
         }
 
