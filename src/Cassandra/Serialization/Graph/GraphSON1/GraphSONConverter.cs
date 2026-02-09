@@ -24,14 +24,14 @@ using System.Text.Json.Nodes;
 
 namespace Cassandra.Serialization.Graph.GraphSON1
 {
-    internal abstract class GraphSONConverter : JsonConverter
+    internal abstract class GraphSONConverter
     {
         private static readonly IDictionary<string, GraphNode> EmptyProperties =
             new ReadOnlyDictionary<string, GraphNode>(new Dictionary<string, GraphNode>());
 
-        protected delegate object ReadDelegate(JTokenReader reader, JsonSerializer serializer);
+        protected delegate object ReadDelegate(JsonNode token);
 
-        protected delegate void WriteDelegate(JsonWriter writer, object value, JsonSerializer serializer);
+        protected delegate void WriteDelegate(Utf8JsonWriter writer, object value, JsonSerializerOptions options);
 
         protected abstract GraphNode ToGraphNode(JsonNode token);
 
@@ -70,8 +70,7 @@ namespace Cassandra.Serialization.Graph.GraphSON1
             if (propertiesJsonProp != null)
             {
                 properties = propertiesJsonProp
-                    .Properties()
-                    .ToDictionary(prop => prop.Name, prop => ToGraphNode(prop.Value));
+                    .ToDictionary(prop => prop.Key, prop => ToGraphNode(prop.Value));
             }
             return new Vertex(
                 ToGraphNode(token, "id", true),
@@ -86,8 +85,7 @@ namespace Cassandra.Serialization.Graph.GraphSON1
             if (propertiesJsonProp != null)
             {
                 properties = propertiesJsonProp
-                    .Properties()
-                    .ToDictionary(prop => prop.Name, prop => ToGraphNode(prop.Value));
+                    .ToDictionary(prop => prop.Key, prop => ToGraphNode(prop.Value));
             }
             return new Edge(
                 ToGraphNode(token, "id", true),
