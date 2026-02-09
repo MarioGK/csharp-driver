@@ -521,7 +521,7 @@ namespace Cassandra.Serialization.Graph.GraphSON2
 
         public string WriteObject(dynamic objectData)
         {
-            return JsonConvert.SerializeObject(ToDict(objectData), GraphSONNode.GraphSONSerializerSettings);
+            return JsonSerializer.Serialize(ToDict(objectData));
         }
 
         public dynamic ToObject(JsonNode token)

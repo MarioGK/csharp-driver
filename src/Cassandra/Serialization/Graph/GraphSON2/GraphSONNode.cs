@@ -17,7 +17,6 @@
 using System;
 using System.Collections.Generic;
 using System.Dynamic;
-using System.Globalization;
 using System.Linq;
 using System.Runtime.Serialization;
 
@@ -32,17 +31,9 @@ namespace Cassandra.Serialization.Graph.GraphSON2
     {
         private readonly IGraphTypeSerializer _graphSerializer;
 
-        private static readonly JTokenEqualityComparer Comparer = new JTokenEqualityComparer();
-
         private readonly JsonNode _token;
 
         private readonly string _graphsonType;
-
-        internal static readonly JsonSerializerSettings GraphSONSerializerSettings = new JsonSerializerSettings
-        {
-            Culture = CultureInfo.InvariantCulture,
-            DateParseHandling = DateParseHandling.None
-        };
 
         public bool DeserializeGraphNodes => _graphSerializer.DefaultDeserializeGraphNodes;
 
@@ -63,7 +54,7 @@ namespace Cassandra.Serialization.Graph.GraphSON2
             }
 
             _graphSerializer = graphTypeSerializer ?? throw new ArgumentNullException(nameof(graphTypeSerializer));
-            var parsedJson = (JsonObject)JsonConvert.DeserializeObject(json, GraphSONNode.GraphSONSerializerSettings);
+            var parsedJson = JsonNode.Parse(json)?.AsObject();
             _token = parsedJson["result"];
             if (_token is JsonObject jobj)
             {
@@ -102,17 +93,30 @@ namespace Cassandra.Serialization.Graph.GraphSON2
 
         private JsonObject GetTypedValue()
         {
-            var value = _token[GraphTypeSerializer.ValueKey];
-            if (value != null && GetGraphSONType() != null)
+            if (_token is JsonObject jobj && GetGraphSONType() != null)
             {
-                // The token represents a GraphSON2/GraphSON3 object {"@type": "g:...", "@value": {}}
-                return value as JsonObject;
+                var value = jobj[GraphTypeSerializer.ValueKey];
+                if (value != null)
+                {
+                    // The token represents a GraphSON2/GraphSON3 object {"@type": "g:...", "@value": {}}
+                    return value as JsonObject;
+                }
             }
 
             return null;
         }
 
-        private JProperty GetProperty(string name)
+        private JsonNode GetPropertyFromObject(JsonObject graphObject, string name)
+        {
+            if (graphObject == null)
+            {
+                return null;
+            }
+            graphObject.TryGetPropertyValue(name, out var val);
+            return val;
+        }
+
+        private JsonNode GetPropertyValue(string name, bool throwIfNotFound)
         {
             var graphObject = _token as JsonObject;
             var typedValue = GetTypedValue();
@@ -124,13 +128,7 @@ namespace Cassandra.Serialization.Graph.GraphSON2
             {
                 throw new KeyNotFoundException($"Cannot retrieve property '{name}' of instance: '{_token}'");
             }
-            return graphObject.Property(name);
-        }
-
-        private JsonNode GetPropertyValue(string name, bool throwIfNotFound)
-        {
-            var property = GetProperty(name);
-            if (property == null)
+            if (!graphObject.TryGetPropertyValue(name, out var propertyValue))
             {
                 if (throwIfNotFound)
                 {
@@ -138,7 +136,7 @@ namespace Cassandra.Serialization.Graph.GraphSON2
                 }
                 return null;
             }
-            return property.Value;
+            return propertyValue;
         }
 
         public dynamic GetRaw()
@@ -165,7 +163,13 @@ namespace Cassandra.Serialization.Graph.GraphSON2
         /// <exception cref="InvalidOperationException">When the underlying value is not an object tree</exception>
         public bool HasProperty(string name)
         {
-            return GetProperty(name) != null;
+            var graphObject = _token as JsonObject;
+            var typedValue = GetTypedValue();
+            if (typedValue != null)
+            {
+                graphObject = typedValue;
+            }
+            return graphObject != null && graphObject.ContainsKey(name);
         }
 
         /// <summary>
@@ -189,7 +193,7 @@ namespace Cassandra.Serialization.Graph.GraphSON2
         /// </summary>
         public override int GetHashCode()
         {
-            return Comparer.GetHashCode(_token);
+            return _token?.ToJsonString()?.GetHashCode() ?? 0;
         }
 
         /// <inheritdoc />
@@ -222,8 +226,7 @@ namespace Cassandra.Serialization.Graph.GraphSON2
                 throw new InvalidOperationException($"Can not get properties from '{item}'");
             }
             return graphObject
-                .Properties()
-                .ToDictionary(prop => prop.Name, prop => new GraphNode(new GraphSONNode(_graphSerializer, prop.Value)) as T);
+                .ToDictionary(prop => prop.Key, prop => new GraphNode(new GraphSONNode(_graphSerializer, prop.Value)) as T);
         }
 
         /// <summary>
@@ -263,22 +266,27 @@ namespace Cassandra.Serialization.Graph.GraphSON2
         {
             if (_token is JsonValue val)
             {
-                return val.ToString(CultureInfo.InvariantCulture);
+                return val.ToString();
             }
 
-            var tokenValue = _token[GraphTypeSerializer.ValueKey];
-
-            switch (tokenValue)
+            if (_token is JsonObject jobj)
             {
-                case null:
-                    return string.Empty;
+                var tokenValue = jobj[GraphTypeSerializer.ValueKey];
 
-                case JsonValue tokenValueVal:
-                    return tokenValueVal.ToString(CultureInfo.InvariantCulture);
+                switch (tokenValue)
+                {
+                    case null:
+                        return string.Empty;
 
-                default:
-                    return tokenValue.ToString();
+                    case JsonValue tokenValueVal:
+                        return tokenValueVal.ToString();
+
+                    default:
+                        return tokenValue.ToJsonString();
+                }
             }
+
+            return _token?.ToJsonString() ?? string.Empty;
         }
 
         public void WriteJson(Utf8JsonWriter writer, JsonSerializerOptions options)
