@@ -18,7 +18,7 @@ using Cassandra.DataStax.Graph;
 using Cassandra.DataStax.Graph.Internal;
 using Cassandra.Serialization.Graph.GraphSON2;
 using Cassandra.Serialization.Graph.Tinkerpop.Structure.IO.GraphSON;
-using Newtonsoft.Json.Linq;
+using System.Text.Json.Nodes;
 
 namespace Cassandra.Serialization.Graph
 {
@@ -37,6 +37,6 @@ namespace Cassandra.Serialization.Graph
         /// <param name="graphNodeFactory">Graph Node factory that can be used to build graph node objects.</param>
         /// <param name="reader">A <see cref="GraphSONReader" /> that can be used to objectify properties of the GraphSON object.</param>
         /// <returns>The deserialized object.</returns>
-        dynamic Objectify(JToken graphsonObject, Func<JToken, GraphNode> graphNodeFactory, IGraphSONReader reader);
+        dynamic Objectify(JsonNode graphsonObject, Func<JsonNode, GraphNode> graphNodeFactory, IGraphSONReader reader);
     }
 }
