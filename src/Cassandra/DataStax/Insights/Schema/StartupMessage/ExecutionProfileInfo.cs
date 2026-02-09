@@ -16,34 +16,33 @@
 
 using System.Collections.Generic;
 using Cassandra.DataStax.Insights.Schema.Converters;
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace Cassandra.DataStax.Insights.Schema.StartupMessage
 {
-    [JsonObject]
     internal class ExecutionProfileInfo
     {
-        [JsonProperty("readTimeout")]
+        [JsonPropertyName("readTimeout")]
         public int? ReadTimeout { get; set; }
         
-        [JsonProperty("retry")]
+        [JsonPropertyName("retry")]
         public PolicyInfo Retry { get; set; }
 
-        [JsonProperty("loadBalancing")]
+        [JsonPropertyName("loadBalancing")]
         public PolicyInfo LoadBalancing { get; set; }
 
-        [JsonProperty("speculativeExecution")]
+        [JsonPropertyName("speculativeExecution")]
         public PolicyInfo SpeculativeExecution { get; set; }
 
-        [JsonProperty("consistency")]
+        [JsonPropertyName("consistency")]
         [JsonConverter(typeof(ConsistencyInsightsConverter))]
         public ConsistencyLevel? Consistency { get; set; }
 
-        [JsonProperty("serialConsistency")]
+        [JsonPropertyName("serialConsistency")]
         [JsonConverter(typeof(ConsistencyInsightsConverter))]
         public ConsistencyLevel? SerialConsistency { get; set; }
 
-        [JsonProperty("graphOptions")]
+        [JsonPropertyName("graphOptions")]
         public Dictionary<string, object> GraphOptions { get; set; }
     }
 }

@@ -25,7 +25,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Cassandra.DataStax.Graph.Internal;
-using Newtonsoft.Json.Linq;
+using System.Text.Json.Nodes;
 
 namespace Cassandra.Serialization.Graph.Tinkerpop.Structure.IO.GraphSON
 {
@@ -90,7 +90,7 @@ namespace Cassandra.Serialization.Graph.Tinkerpop.Structure.IO.GraphSON
         /// </summary>
         /// <param name="graphSonData">The GraphSON collection to deserialize.</param>
         /// <returns>The deserialized object.</returns>
-        public virtual dynamic ToObject(IEnumerable<JToken> graphSonData)
+        public virtual dynamic ToObject(IEnumerable<JsonNode> graphSonData)
         {
             return graphSonData.Select(graphson => ToObject(graphson));
         }
@@ -100,15 +100,15 @@ namespace Cassandra.Serialization.Graph.Tinkerpop.Structure.IO.GraphSON
         /// </summary>
         /// <param name="jToken">The GraphSON to deserialize.</param>
         /// <returns>The deserialized object.</returns>
-        public virtual dynamic ToObject(JToken jToken)
+        public virtual dynamic ToObject(JsonNode jToken)
         {
-            if (jToken is JArray)
+            if (jToken is JsonArray jArray)
             {
-                return jToken.Select(t => ToObject(t));
+                return jArray.Select(t => ToObject(t));
             }
-            if (jToken is JValue jValue)
+            if (jToken is JsonValue jValue)
             {
-                return jValue.Value;
+                return jValue.GetValue<object>();
             }
             if (!HasTypeKey(jToken))
             {
@@ -117,13 +117,13 @@ namespace Cassandra.Serialization.Graph.Tinkerpop.Structure.IO.GraphSON
             return ReadTypedValue(jToken);
         }
 
-        private bool HasTypeKey(JToken jToken)
+        private bool HasTypeKey(JsonNode jToken)
         {
             var graphSONType = (string)jToken[GraphSONTokens.TypeKey];
             return graphSONType != null;
         }
 
-        private dynamic ReadTypedValue(JToken typedValue)
+        private dynamic ReadTypedValue(JsonNode typedValue)
         {
             var graphSONType = (string)typedValue[GraphSONTokens.TypeKey];
             if (!Deserializers.TryGetValue(graphSONType, out var deserializer))
@@ -133,15 +133,12 @@ namespace Cassandra.Serialization.Graph.Tinkerpop.Structure.IO.GraphSON
             return deserializer.Objectify(typedValue[GraphSONTokens.ValueKey], this);
         }
 
-        private dynamic ReadDictionary(JToken jtokenDict)
+        private dynamic ReadDictionary(JsonNode jtokenDict)
         {
             var dict = new Dictionary<string, dynamic>();
-            foreach (var e in jtokenDict)
+            foreach (var e in (JsonObject)jtokenDict)
             {
-                var property = e as JProperty;
-                if (property == null)
-                    throw new InvalidOperationException($"Cannot read graphson: {jtokenDict}");
-                dict.Add(property.Name, ToObject(property.Value));
+                dict.Add(e.Key, ToObject(e.Value));
             }
             return dict;
         }

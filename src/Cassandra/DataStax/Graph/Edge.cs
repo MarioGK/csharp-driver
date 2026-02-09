@@ -14,6 +14,7 @@
 //   limitations under the License.
 //
 
+using System;
 using System.Collections.Generic;
 
 namespace Cassandra.DataStax.Graph
@@ -54,6 +55,14 @@ namespace Cassandra.DataStax.Graph
             GraphNode inV, string inVLabel, GraphNode outV, string outVLabel)
             : base(id, label, properties)
         {
+            if (id == null)
+            {
+                throw new InvalidOperationException("Edge is missing required property 'id'.");
+            }
+            if (label == null)
+            {
+                throw new InvalidOperationException("Edge is missing required property 'label'.");
+            }
             InV = inV;
             InVLabel = inVLabel;
             OutV = outV;

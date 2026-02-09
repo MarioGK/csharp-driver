@@ -14,17 +14,16 @@
 //   limitations under the License.
 //
 
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace Cassandra.DataStax.Insights.Schema.StartupMessage
 {
-    [JsonObject]
     internal class AuthProviderInfo
     {
-        [JsonProperty("type")]
+        [JsonPropertyName("type")]
         public string Type { get; set; }
 
-        [JsonProperty("namespace")]
+        [JsonPropertyName("namespace")]
         public string Namespace { get; set; }
     }
 }

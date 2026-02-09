@@ -23,8 +23,6 @@
 //  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 
-using System.Runtime.ConstrainedExecution;
-
 namespace Cassandra.DataStax.Auth.Sspi.Contexts
 {
     /// <summary>
@@ -32,7 +30,6 @@ namespace Cassandra.DataStax.Auth.Sspi.Contexts
     /// </summary>
     internal class SafeContextHandle : SafeSspiHandle
     {
-        [ReliabilityContract( Consistency.WillNotCorruptState, Cer.Success )]
         protected override bool ReleaseHandle()
         {
             SecurityStatus status = ContextNativeMethods.DeleteSecurityContext(

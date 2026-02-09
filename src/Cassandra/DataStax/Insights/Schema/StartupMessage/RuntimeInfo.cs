@@ -15,20 +15,19 @@
 //
 
 using System.Collections.Generic;
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace Cassandra.DataStax.Insights.Schema.StartupMessage
 {
-    [JsonObject]
     internal class RuntimeInfo
     {
-        [JsonProperty("runtimeFramework")]
+        [JsonPropertyName("runtimeFramework")]
         public string RuntimeFramework { get; set; }
 
-        [JsonProperty("targetFramework")]
+        [JsonPropertyName("targetFramework")]
         public string TargetFramework { get; set; }
 
-        [JsonProperty("dependencies")]
+        [JsonPropertyName("dependencies")]
         public Dictionary<string, AssemblyInfo> Dependencies { get; set; }
     }
 }

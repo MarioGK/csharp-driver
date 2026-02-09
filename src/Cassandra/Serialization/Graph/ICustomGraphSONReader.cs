@@ -16,7 +16,7 @@
 using Cassandra.DataStax.Graph.Internal;
 using Cassandra.Serialization.Graph.GraphSON2;
 using Cassandra.Serialization.Graph.Tinkerpop.Structure.IO.GraphSON;
-using Newtonsoft.Json.Linq;
+using System.Text.Json.Nodes;
 
 namespace Cassandra.Serialization.Graph
 {
@@ -35,6 +35,6 @@ namespace Cassandra.Serialization.Graph
     /// </summary>
     internal interface ICustomGraphSONReader
     {
-        dynamic ToObject(JToken jToken);
+        dynamic ToObject(JsonNode jToken);
     }
 }

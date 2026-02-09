@@ -16,15 +16,11 @@
 
 using System;
 using System.IO;
-using System.Net;
-using System.Security.Authentication;
-using System.Threading.Tasks;
-using Cassandra.Helpers;
-using Newtonsoft.Json;
-#if NETSTANDARD
 using System.Net.Http;
 using System.Net.Http.Headers;
-#endif
+using System.Threading.Tasks;
+using Cassandra.Helpers;
+using System.Text.Json;
 
 namespace Cassandra.DataStax.Cloud
 {
@@ -35,9 +31,6 @@ namespace Cassandra.DataStax.Cloud
         public Task<CloudMetadataResult> GetClusterMetadataAsync(
             string url, SocketOptions socketOptions, SSLOptions sslOptions)
         {
-#if NET452
-            return GetWithWebRequestAsync(url, socketOptions, sslOptions);
-#else
             if (PlatformHelper.RuntimeSupportsCloudTlsSettings())
             {
                 return GetWithHttpClientAsync(url, socketOptions, sslOptions);
@@ -46,86 +39,8 @@ namespace Cassandra.DataStax.Cloud
             throw new NotSupportedException("DataStax Astra support in .NET Core requires .NET Core 2.1 runtime or later. " +
                                             "The HTTPS implementation of .NET Core 2.0 and below don't work when some TLS settings are set. " +
                                             $"The runtime that is being used is: .NET Core {PlatformHelper.GetNetCoreVersion()}");
-#endif
         }
 
-#if !NETSTANDARD
-
-        private async Task<CloudMetadataResult> GetWithWebRequestAsync(
-            string url, SocketOptions socketOptions, SSLOptions sslOptions)
-        {
-            ServicePointManager.SecurityProtocol |= ConvertSslProtocolEnum(sslOptions.SslProtocol);
-            var request = (HttpWebRequest)WebRequest.Create(url);
-            request.KeepAlive = false;
-            request.Timeout = socketOptions.ConnectTimeoutMillis;
-            request.Accept = "application/json";
-
-            request.ServerCertificateValidationCallback = sslOptions.RemoteCertValidationCallback;
-
-            if (sslOptions.CertificateCollection.Count > 0)
-            {
-                request.ClientCertificates.AddRange(sslOptions.CertificateCollection);
-            }
-
-            try
-            {
-                using (var response = (HttpWebResponse) await request.GetResponseAsync().ConfigureAwait(false))
-                {
-                    var responseString = await new StreamReader(response.GetResponseStream()).ReadToEndAsync().ConfigureAwait(false);
-                    if ((int) response.StatusCode < 200 || (int) response.StatusCode >= 300)
-                    {
-                        throw GetServiceRequestException(false, url, null, (int)response.StatusCode);
-                    }
-
-                    try
-                    {
-                        return JsonConvert.DeserializeObject<CloudMetadataResult>(responseString);
-                    }
-                    catch (Exception ex)
-                    {
-                        throw GetServiceRequestException(true, url, ex, (int)response.StatusCode);
-                    }
-                }
-            }
-            catch (NoHostAvailableException)
-            {
-                throw;
-            }
-            catch (Exception ex)
-            {
-                throw GetServiceRequestException(false, url, ex);
-            }
-        }
-
-        private SecurityProtocolType ConvertSslProtocolEnum(SslProtocols protocol)
-        {
-            SecurityProtocolType securityProtocolType = 0;
-            if ((protocol & SslProtocols.Ssl3) != 0)
-            {
-                securityProtocolType |= SecurityProtocolType.Ssl3;
-            }
-            
-            if ((protocol & SslProtocols.Tls) != 0)
-            {
-                securityProtocolType |= SecurityProtocolType.Tls;
-            }
-            
-            if ((protocol & SslProtocols.Tls11) != 0)
-            {
-                securityProtocolType |= SecurityProtocolType.Tls11;
-            }
-            
-            if ((protocol & SslProtocols.Tls12) != 0)
-            {
-                securityProtocolType |= SecurityProtocolType.Tls12;
-            }
-
-            return securityProtocolType;
-        }
-
-#endif
-
-#if NETSTANDARD
         private async Task<CloudMetadataResult> GetWithHttpClientAsync(
             string url, SocketOptions socketOptions, SSLOptions sslOptions)
         {
@@ -154,7 +69,7 @@ namespace Cassandra.DataStax.Cloud
 
                     try
                     {
-                        return JsonConvert.DeserializeObject<CloudMetadataResult>(body);
+                        return JsonSerializer.Deserialize<CloudMetadataResult>(body);
                     }
                     catch (Exception ex2)
                     {
@@ -191,7 +106,7 @@ namespace Cassandra.DataStax.Cloud
 
             return httpClientHandler;
         }
-#endif
+
         private Exception GetServiceRequestException(bool isParsingError, string url, Exception exception = null, int? statusCode = null)
         {
             var message =

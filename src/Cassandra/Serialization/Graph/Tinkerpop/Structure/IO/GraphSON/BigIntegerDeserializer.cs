@@ -23,15 +23,15 @@
 
 using System.Numerics;
 using Cassandra.DataStax.Graph.Internal;
-using Newtonsoft.Json.Linq;
+using System.Text.Json.Nodes;
 
 namespace Cassandra.Serialization.Graph.Tinkerpop.Structure.IO.GraphSON
 {
     internal class BigIntegerDeserializer : IGraphSONDeserializer
     {
-        public dynamic Objectify(JToken graphsonObject, IGraphSONReader reader)
+        public dynamic Objectify(JsonNode graphsonObject, IGraphSONReader reader)
         {
-            var bigInteger = graphsonObject.ToObject<string>();
+            var bigInteger = graphsonObject.GetValue<string>();
             return BigInteger.Parse(bigInteger);
         }
     }

@@ -26,7 +26,7 @@ using System.Collections.Generic;
 using Cassandra.DataStax.Graph;
 using Cassandra.DataStax.Graph.Internal;
 using Cassandra.Serialization.Graph.Tinkerpop.Structure.IO.GraphSON;
-using Newtonsoft.Json.Linq;
+using System.Text.Json.Nodes;
 
 namespace Cassandra.Serialization.Graph.GraphSON2.Structure
 {
@@ -38,7 +38,7 @@ namespace Cassandra.Serialization.Graph.GraphSON2.Structure
         public static string TypeName => 
             GraphSONUtil.FormatTypeName(VertexPropertyDeserializer.Prefix, VertexPropertyDeserializer.TypeKey);
 
-        public dynamic Objectify(JToken token, Func<JToken, GraphNode> factory, IGraphSONReader reader)
+        public dynamic Objectify(JsonNode token, Func<JsonNode, GraphNode> factory, IGraphSONReader reader)
         {
             var graphNode = ToGraphNode(factory, token);
 

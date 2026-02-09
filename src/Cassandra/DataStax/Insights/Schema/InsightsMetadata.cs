@@ -16,27 +16,26 @@
 
 using System.Collections.Generic;
 using Cassandra.DataStax.Insights.Schema.Converters;
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace Cassandra.DataStax.Insights.Schema
 {
-    [JsonObject]
     internal class InsightsMetadata
     {
-        [JsonProperty("name")]
+        [JsonPropertyName("name")]
         public string Name { get; set; }
 
-        [JsonProperty("timestamp")]
+        [JsonPropertyName("timestamp")]
         public long Timestamp { get; set; }
 
-        [JsonProperty("tags")]
+        [JsonPropertyName("tags")]
         public Dictionary<string, string> Tags { get; set; }
 
-        [JsonProperty("insightType")]
+        [JsonPropertyName("insightType")]
         [JsonConverter(typeof(InsightTypeInsightsConverter))]
         public InsightType InsightType { get; set; }
 
-        [JsonProperty("insightMappingId")]
+        [JsonPropertyName("insightMappingId")]
         public string InsightMappingId { get; set; }
     }
 }

@@ -15,7 +15,7 @@
 
 using System;
 
-using Newtonsoft.Json.Linq;
+using System.Text.Json.Nodes;
 
 namespace Cassandra.Serialization.Graph.GraphSON3.Dse
 {
@@ -24,14 +24,14 @@ namespace Cassandra.Serialization.Graph.GraphSON3.Dse
     {
         /// <inheritdoc />
         public dynamic Objectify(
-            JToken graphsonObject, Type type, IGraphTypeSerializer serializer, IGenericSerializer genericSerializer)
+            JsonNode graphsonObject, Type type, IGraphTypeSerializer serializer, IGenericSerializer genericSerializer)
         {
             if (!Utils.IsTuple(type))
             {
                 throw new InvalidOperationException($"Can not deserialize a tuple to {type.FullName}.");
             }
 
-            var values = (JArray)graphsonObject["value"];
+            var values = (JsonArray)graphsonObject["value"];
 
             var genericArguments = type.GetGenericArguments();
 

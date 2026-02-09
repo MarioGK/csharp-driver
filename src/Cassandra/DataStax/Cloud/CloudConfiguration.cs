@@ -17,21 +17,20 @@
 using System;
 using System.Collections.Generic;
 
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace Cassandra.DataStax.Cloud
 {
-    [JsonObject]
     internal class CloudConfiguration : IEquatable<CloudConfiguration>
     {
-        [JsonProperty("host")]
-        public string Host { get; private set; }
+        [JsonPropertyName("host")]
+        public string Host { get; init; }
 
-        [JsonProperty("port")]
-        public int Port { get; private set; }
+        [JsonPropertyName("port")]
+        public int Port { get; init; }
         
-        [JsonProperty("pfxCertPassword")]
-        public string CertificatePassword { get; private set; }
+        [JsonPropertyName("pfxCertPassword")]
+        public string CertificatePassword { get; init; }
 
         public override bool Equals(object obj)
         {

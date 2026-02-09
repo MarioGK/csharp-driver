@@ -23,15 +23,15 @@
 
 using System;
 using Cassandra.DataStax.Graph.Internal;
-using Newtonsoft.Json.Linq;
+using System.Text.Json.Nodes;
 
 namespace Cassandra.Serialization.Graph.Tinkerpop.Structure.IO.GraphSON
 {
     internal class UuidDeserializer : IGraphSONDeserializer
     {
-        public dynamic Objectify(JToken graphsonObject, IGraphSONReader reader)
+        public dynamic Objectify(JsonNode graphsonObject, IGraphSONReader reader)
         {
-            return graphsonObject.ToObject<Guid>();
+            return graphsonObject.GetValue<Guid>();
         }
     }
 }

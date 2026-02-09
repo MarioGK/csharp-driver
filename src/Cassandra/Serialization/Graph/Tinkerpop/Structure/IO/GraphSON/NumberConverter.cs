@@ -25,7 +25,8 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using Cassandra.DataStax.Graph.Internal;
-using Newtonsoft.Json.Linq;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 
 namespace Cassandra.Serialization.Graph.Tinkerpop.Structure.IO.GraphSON
 {
@@ -36,9 +37,14 @@ namespace Cassandra.Serialization.Graph.Tinkerpop.Structure.IO.GraphSON
         protected virtual string Prefix => "g";
         protected virtual bool StringifyValue => false;
 
-        public dynamic Objectify(JToken graphsonObject, IGraphSONReader reader)
+        public dynamic Objectify(JsonNode graphsonObject, IGraphSONReader reader)
         {
-            return graphsonObject.ToObject(HandledType);
+            // Some number types (like BigDecimal) are serialized as strings in GraphSON
+            if (graphsonObject is JsonValue jv && jv.TryGetValue<string>(out var strVal))
+            {
+                return Convert.ChangeType(strVal, HandledType, CultureInfo.InvariantCulture);
+            }
+            return JsonSerializer.Deserialize(graphsonObject, HandledType);
         }
 
         public Dictionary<string, dynamic> Dictify(dynamic objectData, IGraphSONWriter writer)

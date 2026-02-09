@@ -14,26 +14,42 @@
 //    limitations under the License.
 
 using System;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+using System.Text.Json;
+using System.Text.Json.Nodes;
+using System.Text.Json.Serialization;
 
 namespace Cassandra.DataStax.Graph
 {
-    internal class GraphNodeConverter : JsonConverter
+    internal class GraphNodeConverter : JsonConverter<GraphNode>
     {
-        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+        public override void Write(Utf8JsonWriter writer, GraphNode value, JsonSerializerOptions options)
         {
-            ((GraphNode)value).WriteJson(writer, serializer);
+            value.WriteJson(writer, options);
         }
 
-        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+        public override GraphNode Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
-            return new GraphNode(JObject.Load(reader));
+            var jsonNode = JsonNode.Parse(ref reader);
+            if (jsonNode is JsonObject jsonObject)
+            {
+                return new GraphNode(jsonObject);
+            }
+            // For non-object values (arrays, scalars), wrap in a result object so GraphSON1Node can parse
+            var wrapper = new JsonObject { ["result"] = jsonNode };
+            return new GraphNode(wrapper.ToJsonString());
+        }
+    }
+
+    internal class GraphNodeConverterFactory : JsonConverterFactory
+    {
+        public override bool CanConvert(Type typeToConvert)
+        {
+            return typeToConvert == typeof(IGraphNode) || typeToConvert == typeof(GraphNode);
         }
 
-        public override bool CanConvert(Type objectType)
+        public override JsonConverter CreateConverter(Type typeToConvert, JsonSerializerOptions options)
         {
-            return objectType == typeof(GraphNode);
+            return new GraphNodeConverter();
         }
     }
 }

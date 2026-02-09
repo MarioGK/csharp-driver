@@ -16,7 +16,7 @@
 using System.Collections.Generic;
 using Cassandra.DataStax.Graph.Internal;
 using Cassandra.Serialization.Graph.Tinkerpop.Structure.IO.GraphSON;
-using Newtonsoft.Json.Linq;
+using System.Text.Json.Nodes;
 
 namespace Cassandra.Serialization.Graph.GraphSON2
 {
@@ -36,7 +36,7 @@ namespace Cassandra.Serialization.Graph.GraphSON2
             return GraphSONUtil.ToTypedValue(_typeKey, objectData == null ? null : ToString(objectData), _prefix);
         }
 
-        public dynamic Objectify(JToken graphsonObject, IGraphSONReader reader)
+        public dynamic Objectify(JsonNode graphsonObject, IGraphSONReader reader)
         {
             var str = TokenToString(graphsonObject);
             if (str == null)
@@ -47,9 +47,9 @@ namespace Cassandra.Serialization.Graph.GraphSON2
             return FromString(str);
         }
 
-        protected virtual string TokenToString(JToken token)
+        protected virtual string TokenToString(JsonNode token)
         {
-            return token.ToObject<string>();
+            return token.GetValue<string>();
         }
         
         protected abstract string ToString(dynamic obj);

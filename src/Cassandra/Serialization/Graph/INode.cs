@@ -18,7 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Dynamic;
 using Cassandra.DataStax.Graph;
-using Newtonsoft.Json;
+using System.Text.Json;
 
 namespace Cassandra.Serialization.Graph
 {
@@ -112,7 +112,7 @@ namespace Cassandra.Serialization.Graph
         /// </summary>
         bool TryGetMember(GetMemberBinder binder, out object result);
 
-        void WriteJson(JsonWriter writer, JsonSerializer serializer);
+        void WriteJson(Utf8JsonWriter writer, JsonSerializerOptions options);
         
         void GetObjectData(System.Runtime.Serialization.SerializationInfo info,
                            System.Runtime.Serialization.StreamingContext context);

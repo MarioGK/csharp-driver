@@ -29,7 +29,7 @@ using Cassandra.DataStax.Graph.Internal;
 using Cassandra.Serialization.Graph.GraphSON2;
 using Cassandra.Serialization.Graph.GraphSON2.Structure;
 using Cassandra.Serialization.Graph.Tinkerpop.Structure.IO.GraphSON;
-using Newtonsoft.Json.Linq;
+using System.Text.Json.Nodes;
 
 namespace Cassandra.Serialization.Graph.GraphSON3.Structure
 {
@@ -41,12 +41,12 @@ namespace Cassandra.Serialization.Graph.GraphSON3.Structure
         public static string TypeName => 
             GraphSONUtil.FormatTypeName(Path3Deserializer.Prefix, Path3Deserializer.TypeKey);
 
-        public dynamic Objectify(JToken graphsonObject, Func<JToken, GraphNode> factory, IGraphSONReader reader)
+        public dynamic Objectify(JsonNode graphsonObject, Func<JsonNode, GraphNode> factory, IGraphSONReader reader)
         {
             ICollection<ICollection<string>> labels = null;
             ICollection<GraphNode> objects = null;
 
-            if (graphsonObject is JObject jObj)
+            if (graphsonObject is JsonObject jObj)
             {
                 labels = ParseLabels(jObj);
                 objects = ParseObjects(jObj, factory);
@@ -55,16 +55,16 @@ namespace Cassandra.Serialization.Graph.GraphSON3.Structure
             return new Path(labels, objects);
         }
 
-        private ICollection<ICollection<string>> ParseLabels(JObject tokenObj)
+        private ICollection<ICollection<string>> ParseLabels(JsonObject tokenObj)
         {
-            if (tokenObj["labels"] is JObject labelsObj 
-                && labelsObj[GraphTypeSerializer.ValueKey] is JArray labelsArray)
+            if (tokenObj["labels"] is JsonObject labelsObj 
+                && labelsObj[GraphTypeSerializer.ValueKey] is JsonArray labelsArray)
             {
                 return labelsArray
                        .Select(node =>
                        {
-                          if (node is JObject nodeObj
-                              && nodeObj[GraphTypeSerializer.ValueKey] is JArray nodeArray)
+                          if (node is JsonObject nodeObj
+                              && nodeObj[GraphTypeSerializer.ValueKey] is JsonArray nodeArray)
                           {
                               return new HashSet<string>(nodeArray.Select(n => n.ToString()));
                           }
@@ -77,10 +77,10 @@ namespace Cassandra.Serialization.Graph.GraphSON3.Structure
             return null;
         }
 
-        private ICollection<GraphNode> ParseObjects(JObject tokenObj, Func<JToken, GraphNode> factory)
+        private ICollection<GraphNode> ParseObjects(JsonObject tokenObj, Func<JsonNode, GraphNode> factory)
         {
-            if (tokenObj["objects"] is JObject objectsObj 
-                && objectsObj[GraphTypeSerializer.ValueKey] is JArray objectsArray)
+            if (tokenObj["objects"] is JsonObject objectsObj 
+                && objectsObj[GraphTypeSerializer.ValueKey] is JsonArray objectsArray)
             {
                 return objectsArray.Select(jt => ToGraphNode(factory, jt)).ToArray();
             }

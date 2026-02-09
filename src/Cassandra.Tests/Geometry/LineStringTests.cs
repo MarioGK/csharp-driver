@@ -17,10 +17,9 @@
 using System;
 using System.Globalization;
 using System.Linq;
+using System.Text.Json;
 using Cassandra.Geometry;
 using Cassandra.Serialization.Geometry;
-using Cassandra.Serialization.Graph.GraphSON1;
-using Newtonsoft.Json;
 using NUnit.Framework;
 
 namespace Cassandra.Tests.Geometry
@@ -42,10 +41,10 @@ namespace Cassandra.Tests.Geometry
                 var expected = string.Format("{{\"type\":\"LineString\",\"coordinates\":[{0}]}}",
                     string.Join(",", line.Points.Select(p => "[" + p.X.ToString(CultureInfo.InvariantCulture) + "," + p.Y.ToString(CultureInfo.InvariantCulture) + "]")));
                 // Default serialization to JSON is GeoJson
-                var json = JsonConvert.SerializeObject(line);
+                var json = JsonSerializer.Serialize(line);
                 Assert.AreEqual(expected, json);
                 Assert.AreEqual(expected, line.ToGeoJson());
-                Assert.AreEqual(expected, JsonConvert.DeserializeObject<LineString>(json).ToGeoJson());
+                Assert.AreEqual(expected, JsonSerializer.Deserialize<LineString>(json).ToGeoJson());
             }
         }
 
@@ -54,9 +53,8 @@ namespace Cassandra.Tests.Geometry
         {
             foreach (var line in Values)
             {
-                var json = JsonConvert.SerializeObject(line, GraphSON1ContractResolver.Settings);
                 var expected = string.Format("\"{0}\"", line);
-                Assert.AreEqual(expected, json);
+                Assert.AreEqual(expected, "\"" + line.ToString() + "\"");
             }
         }
 

@@ -23,7 +23,7 @@ using System.Text;
 using Cassandra.DataStax.Graph;
 using Cassandra.Geometry;
 using Cassandra.Serialization.Graph.GraphSON1;
-using Newtonsoft.Json;
+using System.Text.Json;
 using NUnit.Framework;
 
 namespace Cassandra.Tests.DataStax.Graph
@@ -317,10 +317,10 @@ namespace Cassandra.Tests.DataStax.Graph
         [TestCase(false)]
         public void GraphNode_Should_Be_Serializable(bool useConverter)
         {
-            var settings = new JsonSerializerSettings();
+            var options = new JsonSerializerOptions();
             if (useConverter)
             {
-                settings = GraphSON1ContractResolver.Settings;
+                options = GraphSON1ContractResolver.Options;
             }
             const string json = "{" +
                                 "\"id\":{\"member_id\":0,\"community_id\":586910,\"~label\":\"vertex\",\"group_id\":2}," +
@@ -331,7 +331,7 @@ namespace Cassandra.Tests.DataStax.Graph
                                 "\"age\":[{\"id\":{\"local_id\":\"00000000-0000-8008-0000-000000000000\",\"~type\":\"age\",\"out_vertex\":{\"member_id\":0,\"community_id\":586910,\"~label\":\"vertex\",\"group_id\":2}},\"value\":34,\"label\":\"age\"}]}" +
                                 "}";
             IGraphNode node = new GraphNode("{\"result\":" + json + "}");
-            var serialized = JsonConvert.SerializeObject(node, settings);
+            var serialized = JsonSerializer.Serialize(node, options);
             Assert.AreEqual(json, serialized);
         }
 
@@ -577,16 +577,16 @@ namespace Cassandra.Tests.DataStax.Graph
         public void Should_Be_Serializable()
         {
             var json = "{\"something\":true}";
-            var result = JsonConvert.DeserializeObject<GraphNode>(json);
+            var result = JsonSerializer.Deserialize<GraphNode>(json);
             Assert.True(result.Get<bool>("something"));
-            Assert.AreEqual(json, JsonConvert.SerializeObject(result));
+            Assert.AreEqual(json, JsonSerializer.Serialize(result));
 
             json = "{\"something\":{\"val\":1}}";
-            result = JsonConvert.DeserializeObject<GraphNode>(json);
+            result = JsonSerializer.Deserialize<GraphNode>(json);
             var objectTree = result.Get<GraphNode>("something");
             Assert.NotNull(objectTree);
             Assert.AreEqual(1D, objectTree.Get<double>("val"));
-            Assert.AreEqual(json, JsonConvert.SerializeObject(result));
+            Assert.AreEqual(json, JsonSerializer.Serialize(result));
         }
 
         private static GraphNode GetGraphNode(string json)

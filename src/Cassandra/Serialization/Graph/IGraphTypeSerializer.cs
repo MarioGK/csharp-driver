@@ -17,7 +17,7 @@ using System;
 using Cassandra.DataStax.Graph;
 using Cassandra.DataStax.Graph.Internal;
 using Cassandra.Serialization.Graph.GraphSON2;
-using Newtonsoft.Json.Linq;
+using System.Text.Json.Nodes;
 
 namespace Cassandra.Serialization.Graph
 {
@@ -36,7 +36,7 @@ namespace Cassandra.Serialization.Graph
         /// This is used by the fluent driver (set to false) to force the deserialization of all
         /// inner properties to the actual types instead of returning GraphNode objects. This is necessary
         /// because the GLV serializers call <see cref="IGraphSONReader.ToObject"/> which is implemented by
-        /// <see cref="GraphTypeSerializer"/> with a call to <see cref="FromDb(JToken,Type)"/> (with "object" as the requested type).
+        /// <see cref="GraphTypeSerializer"/> with a call to <see cref="FromDb(JsonNode,Type)"/> (with "object" as the requested type).
         /// No type conversion will be made since the requested type is object.
         /// </para>
         /// </summary>
@@ -54,18 +54,18 @@ namespace Cassandra.Serialization.Graph
         /// Performs deserialization of the provided token and attempts to convert the
         /// deserialized object to the provided type. 
         /// </summary>
-        object FromDb(JToken token, Type type);
+        object FromDb(JsonNode token, Type type);
 
         /// <summary>
-        /// Overload of <see cref="FromDb(JToken,Type)"/> that allows the caller to override
+        /// Overload of <see cref="FromDb(JsonNode,Type)"/> that allows the caller to override
         /// <see cref="DefaultDeserializeGraphNodes"/>.
         /// </summary>
-        object FromDb(JToken token, Type type, bool deserializeGraphNodes);
+        object FromDb(JsonNode token, Type type, bool deserializeGraphNodes);
         
         /// <summary>
-        /// Generic version of <see cref="FromDb(JToken,Type)"/>
+        /// Generic version of <see cref="FromDb(JsonNode,Type)"/>
         /// </summary>
-        T FromDb<T>(JToken token);
+        T FromDb<T>(JsonNode token);
 
         /// <summary>
         /// Serializes the provided object to GraphSON.

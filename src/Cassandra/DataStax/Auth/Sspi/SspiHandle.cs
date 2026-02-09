@@ -24,7 +24,6 @@
 //
 
 using System;
-using System.Runtime.ConstrainedExecution;
 using System.Runtime.InteropServices;
 
 namespace Cassandra.DataStax.Auth.Sspi
@@ -65,7 +64,6 @@ namespace Cassandra.DataStax.Auth.Sspi
         /// <remarks>
         /// This method is executed in a CER during handle release.
         /// </remarks>
-        [ReliabilityContract( Consistency.WillNotCorruptState, Cer.Success)]
         public void SetInvalid()
         {
             this.lowPart = IntPtr.Zero;
@@ -91,7 +89,6 @@ namespace Cassandra.DataStax.Auth.Sspi
             get { return IsClosed || this.rawHandle.IsZero();  }
         }
 
-        [ReliabilityContract( Consistency.WillNotCorruptState, Cer.Success )]
         protected override bool ReleaseHandle()
         {
             this.rawHandle.SetInvalid();

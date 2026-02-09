@@ -14,20 +14,19 @@
 //   limitations under the License.
 //
 
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace Cassandra.DataStax.Insights.Schema.StartupMessage
 {
-    [JsonObject]
     internal class InsightsPlatformInfo
     {
-        [JsonProperty("os")]
+        [JsonPropertyName("os")]
         public OperatingSystemInfo OperatingSystem { get; set; }
 
-        [JsonProperty("cpus")]
+        [JsonPropertyName("cpus")]
         public CentralProcessingUnitsInfo CentralProcessingUnits { get; set; }
 
-        [JsonProperty("runtime")]
+        [JsonPropertyName("runtime")]
         public RuntimeInfo Runtime { get; set; }
     }
 }

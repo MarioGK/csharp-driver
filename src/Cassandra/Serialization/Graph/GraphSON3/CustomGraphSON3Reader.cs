@@ -21,7 +21,7 @@ using Cassandra.Serialization.Graph.GraphSON2;
 using Cassandra.Serialization.Graph.GraphSON3.Dse;
 using Cassandra.Serialization.Graph.GraphSON3.Structure;
 using Cassandra.Serialization.Graph.GraphSON3.Tinkerpop;
-using Newtonsoft.Json.Linq;
+using System.Text.Json.Nodes;
 
 namespace Cassandra.Serialization.Graph.GraphSON3
 {
@@ -66,7 +66,7 @@ namespace Cassandra.Serialization.Graph.GraphSON3
         }
 
         public CustomGraphSON3Reader(
-            Func<JToken, GraphNode> graphNodeFactory, 
+            Func<JsonNode, GraphNode> graphNodeFactory, 
             IReadOnlyDictionary<string, IGraphSONDeserializer> customDeserializers, 
             IGraphSONReader reader) 
             : base(

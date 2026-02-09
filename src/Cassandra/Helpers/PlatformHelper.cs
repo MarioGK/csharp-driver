@@ -18,6 +18,7 @@ using System;
 using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
 using System.Text.RegularExpressions;
 
 namespace Cassandra.Helpers
@@ -42,7 +43,10 @@ namespace Cassandra.Helpers
 #elif NETSTANDARD2_0
             return ".NET Standard 2.0";
 #else
-            return null;
+            var framework = Assembly.GetExecutingAssembly()
+                .GetCustomAttribute<System.Runtime.Versioning.TargetFrameworkAttribute>()?
+                .FrameworkDisplayName;
+            return framework;
 #endif
         }
 
@@ -81,6 +85,7 @@ namespace Cassandra.Helpers
             }
         }
         
+        [SupportedOSPlatform("windows")]
         public static CpuInfo GetWmiCpuInfo()
         {
             var count = 0;
@@ -118,7 +123,6 @@ namespace Cassandra.Helpers
             return new CpuInfo(null, Environment.ProcessorCount);
         }
 
-#if !NETFRAMEWORK
         public static bool RuntimeSupportsCloudTlsSettings()
         {
             var netCoreVersion = PlatformHelper.GetNetCoreVersion();
@@ -150,7 +154,7 @@ namespace Cassandra.Helpers
         public static string GetNetCoreVersion()
         {
             var assembly = typeof(System.Runtime.GCSettings).GetTypeInfo().Assembly;
-            var assemblyPath = assembly.CodeBase.Split(new[] { '/', '\\' }, StringSplitOptions.RemoveEmptyEntries);
+            var assemblyPath = assembly.Location.Split(new[] { '/', '\\' }, StringSplitOptions.RemoveEmptyEntries);
             var netCoreAppIndex = Array.IndexOf(assemblyPath, "Microsoft.NETCore.App");
             if (netCoreAppIndex > 0 && netCoreAppIndex < assemblyPath.Length - 2)
             {
@@ -158,6 +162,5 @@ namespace Cassandra.Helpers
             }
             return null;
         }
-#endif
     }
 }

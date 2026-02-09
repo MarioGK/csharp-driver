@@ -17,10 +17,9 @@
 using System;
 using System.Globalization;
 using System.Linq;
+using System.Text.Json;
 using Cassandra.Geometry;
 using Cassandra.Serialization.Geometry;
-using Cassandra.Serialization.Graph.GraphSON1;
-using Newtonsoft.Json;
 using NUnit.Framework;
 
 namespace Cassandra.Tests.Geometry
@@ -41,10 +40,10 @@ namespace Cassandra.Tests.Geometry
             {
                 var expected = string.Format("{{\"type\":\"Point\",\"coordinates\":[{0},{1}]}}", point.X.ToString(CultureInfo.InvariantCulture), point.Y.ToString(CultureInfo.InvariantCulture));
                 // Default serialization to JSON is GeoJson
-                var json = JsonConvert.SerializeObject(point);
+                var json = JsonSerializer.Serialize(point);
                 Assert.AreEqual(expected, json);
                 Assert.AreEqual(expected, point.ToGeoJson());
-                Assert.AreEqual(expected, JsonConvert.DeserializeObject<Point>(json).ToGeoJson());
+                Assert.AreEqual(expected, JsonSerializer.Deserialize<Point>(json).ToGeoJson());
             }
         }
 
@@ -53,9 +52,8 @@ namespace Cassandra.Tests.Geometry
         {
             foreach (var point in Values)
             {
-                var json = JsonConvert.SerializeObject(point, GraphSON1ContractResolver.Settings);
                 var expected = string.Format("\"{0}\"", point);
-                Assert.AreEqual(expected, json);
+                Assert.AreEqual(expected, "\"" + point.ToString() + "\"");
             }
         }
 

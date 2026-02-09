@@ -14,26 +14,22 @@
 //    limitations under the License.
 
 using System;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace Cassandra.Geometry
 {
-    internal class PolygonJsonConverter : JsonConverter
+    internal class PolygonJsonConverter : JsonConverter<Polygon>
     {
-        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+        public override void Write(Utf8JsonWriter writer, Polygon value, JsonSerializerOptions options)
         {
-            ((Polygon)value).WriteJson(writer, serializer);
+            value.WriteJson(writer, options);
         }
 
-        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+        public override Polygon Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
-            return new Polygon(JObject.Load(reader));
-        }
-
-        public override bool CanConvert(Type objectType)
-        {
-            return objectType == typeof(Polygon);
+            using var doc = JsonDocument.ParseValue(ref reader);
+            return new Polygon(doc.RootElement);
         }
     }
 }

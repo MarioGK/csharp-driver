@@ -32,7 +32,7 @@ namespace Cassandra.Tests
                             .GetCustomAttribute<TargetFrameworkAttribute>()?
                             .FrameworkName;
 
-            Assert.AreEqual(".NETStandard,Version=v2.0", framework);
+            Assert.AreEqual(".NETCoreApp,Version=v10.0", framework);
         }
 #elif NETFRAMEWORK
         [Test]

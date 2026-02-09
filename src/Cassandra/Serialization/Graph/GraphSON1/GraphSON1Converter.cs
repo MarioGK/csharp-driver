@@ -19,10 +19,10 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Net;
 using System.Numerics;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 using Cassandra.DataStax.Graph;
 using Cassandra.Geometry;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace Cassandra.Serialization.Graph.GraphSON1
 {
@@ -49,14 +49,14 @@ namespace Cassandra.Serialization.Graph.GraphSON1
         {
             _readers = new Dictionary<Type, ReadDelegate>
             {
-                { typeof(IPAddress), (r, _) => IPAddress.Parse(r.Value.ToString()) },
-                { typeof(BigInteger), (r, _) => BigInteger.Parse(r.Value.ToString(), CultureInfo.InvariantCulture) },
-                { typeof(Point), (r, _) => Point.Parse(r.Value.ToString()) },
-                { typeof(LineString), (r, _) => LineString.Parse(r.Value.ToString()) },
-                { typeof(Polygon), (r, _) => Polygon.Parse(r.Value.ToString()) },
-                { typeof(Duration), (r, _) => Duration.Parse(r.Value.ToString()) },
-                { typeof(LocalDate), (r, _) => LocalDate.Parse(r.Value.ToString()) },
-                { typeof(LocalTime), (r, _) => LocalTime.Parse(r.Value.ToString()) },
+                { typeof(IPAddress), (t) => IPAddress.Parse(t.ToString()) },
+                { typeof(BigInteger), (t) => BigInteger.Parse(t.ToString(), CultureInfo.InvariantCulture) },
+                { typeof(Point), (t) => Point.Parse(t.ToString()) },
+                { typeof(LineString), (t) => LineString.Parse(t.ToString()) },
+                { typeof(Polygon), (t) => Polygon.Parse(t.ToString()) },
+                { typeof(Duration), (t) => Duration.Parse(t.ToString()) },
+                { typeof(LocalDate), (t) => LocalDate.Parse(t.ToString()) },
+                { typeof(LocalTime), (t) => LocalTime.Parse(t.ToString()) },
                 { typeof(GraphNode), GetTokenReader(t => new GraphNode(GraphSON1Node.CreateParsedNode(t))) },
                 { typeof(IGraphNode), GetTokenReader(t => new GraphNode(GraphSON1Node.CreateParsedNode(t))) },
                 { typeof(Vertex), GetTokenReader(ToVertex) },
@@ -70,12 +70,11 @@ namespace Cassandra.Serialization.Graph.GraphSON1
             };
         }
 
-        private ReadDelegate GetTokenReader<T>(Func<JToken, T> tokenReader)
+        private ReadDelegate GetTokenReader<T>(Func<JsonNode, T> tokenReader)
         {
-            object TokenReader(JTokenReader reader, JsonSerializer serializer)
+            object TokenReader(JsonNode token)
             {
-                var token = reader.CurrentToken;
-                if (!(token is JObject))
+                if (!(token is JsonObject))
                 {
                     throw new InvalidOperationException($"Cannot create a {typeof(T).Name} from '{token}'");
                 }
@@ -84,55 +83,61 @@ namespace Cassandra.Serialization.Graph.GraphSON1
             return TokenReader;
         }
 
-        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+        public void WriteJson(Utf8JsonWriter writer, object value, JsonSerializerOptions options)
         {
             if (!Writers.TryGetValue(value.GetType(), out WriteDelegate writeHandler))
             {
                 return;
             }
-            writeHandler(writer, value, serializer);
+            writeHandler(writer, value, options);
         }
 
-        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+        public object ReadJson(JsonNode token, Type objectType)
         {
             if (!_readers.TryGetValue(objectType, out ReadDelegate readHandler))
             {
                 return null;
             }
-            return readHandler((JTokenReader)reader, serializer);
+            return readHandler(token);
         }
 
-        protected override GraphNode ToGraphNode(JToken token)
+        protected override GraphNode ToGraphNode(JsonNode token)
         {
             return token == null ? null : new GraphNode(GraphSON1Node.CreateParsedNode(token));
         }
 
-        public override bool CanConvert(Type objectType)
+        public bool CanConvert(Type objectType)
         {
             return _readers.ContainsKey(objectType);
         }
 
-        private static void WriteStringValue(JsonWriter writer, object value, JsonSerializer serializer)
+        private static void WriteStringValue(Utf8JsonWriter writer, object value, JsonSerializerOptions options)
         {
             // GraphSON1 uses string representation for geometry types
-            writer.WriteValue(value.ToString());
+            writer.WriteStringValue(value.ToString());
         }
 
-        private static void WriteStringRawValue(JsonWriter writer, object value, JsonSerializer serializer)
+        private static void WriteStringRawValue(Utf8JsonWriter writer, object value, JsonSerializerOptions options)
         {
             // ie: BigInteger
             writer.WriteRawValue(value.ToString());
         }
 
-        private static void WriteGraphNode(JsonWriter writer, object value, JsonSerializer serializer)
+        private static void WriteGraphNode(Utf8JsonWriter writer, object value, JsonSerializerOptions options)
         {
-            ((GraphNode)value).WriteJson(writer, serializer);
+            var graphNode = (GraphNode)value;
+            if (!graphNode.IsObjectTree)
+            {
+                throw new NotSupportedException(
+                    "Deserialization of GraphNodes that don't represent object trees is not supported");
+            }
+            JsonSerializer.Serialize(writer, graphNode.GetRaw(), options);
         }
 
-        private static void WriteDuration(JsonWriter writer, object value, JsonSerializer serializer)
+        private static void WriteDuration(Utf8JsonWriter writer, object value, JsonSerializerOptions options)
         {
             var durationString = ((Duration)value).ToJavaDurationString();
-            writer.WriteValue(durationString);
+            writer.WriteStringValue(durationString);
         }
     }
 }

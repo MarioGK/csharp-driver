@@ -14,17 +14,16 @@
 //   limitations under the License.
 //
 
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace Cassandra.DataStax.Insights.Schema.StartupMessage
 {
-    [JsonObject]
     internal class PoolSizeByHostDistance
     {
-        [JsonProperty("local")]
+        [JsonPropertyName("local")]
         public int Local { get; set; }
 
-        [JsonProperty("remote")]
+        [JsonPropertyName("remote")]
         public int Remote { get; set; }
     }
 }

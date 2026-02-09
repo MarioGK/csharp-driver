@@ -16,9 +16,11 @@
 
 using System;
 using System.Collections.Generic;
+using System.Text.Json.Serialization;
 
 namespace Cassandra.DataStax.Graph
 {
+    [JsonConverter(typeof(GraphNodeConverterFactory))]
     public interface IGraphNode : IEquatable<IGraphNode>
     {
         /// <summary>

@@ -14,7 +14,7 @@
 //    limitations under the License.
 
 using Cassandra.Serialization.Graph.Tinkerpop.Structure.IO.GraphSON;
-using Newtonsoft.Json.Linq;
+using System.Text.Json.Nodes;
 
 namespace Cassandra.DataStax.Graph.Internal
 {
@@ -33,6 +33,6 @@ namespace Cassandra.DataStax.Graph.Internal
     /// </summary>
     public interface IGraphSONReader
     {
-        dynamic ToObject(JToken jToken);
+        dynamic ToObject(JsonNode jToken);
     }
 }

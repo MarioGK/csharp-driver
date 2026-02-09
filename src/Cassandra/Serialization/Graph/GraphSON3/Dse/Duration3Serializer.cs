@@ -16,7 +16,7 @@
 using System.Collections.Generic;
 using Cassandra.DataStax.Graph.Internal;
 using Cassandra.Serialization.Graph.Tinkerpop.Structure.IO.GraphSON;
-using Newtonsoft.Json.Linq;
+using System.Text.Json.Nodes;
 
 namespace Cassandra.Serialization.Graph.GraphSON3.Dse
 {
@@ -42,7 +42,7 @@ namespace Cassandra.Serialization.Graph.GraphSON3.Dse
                 Duration3Serializer.Prefix);
         }
 
-        public dynamic Objectify(JToken graphsonObject, IGraphSONReader reader)
+        public dynamic Objectify(JsonNode graphsonObject, IGraphSONReader reader)
         {
             var months = (int) reader.ToObject(graphsonObject["months"]);
             var days = (int) reader.ToObject(graphsonObject["days"]);

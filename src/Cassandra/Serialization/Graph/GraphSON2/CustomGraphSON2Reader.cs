@@ -25,7 +25,7 @@ using Cassandra.Serialization.Graph.GraphSON2.Tinkerpop;
 using Cassandra.Serialization.Graph.GraphSON3.Tinkerpop;
 using Cassandra.Serialization.Graph.Tinkerpop.Structure.IO.GraphSON;
 
-using Newtonsoft.Json.Linq;
+using System.Text.Json.Nodes;
 
 namespace Cassandra.Serialization.Graph.GraphSON2
 {
@@ -94,7 +94,7 @@ namespace Cassandra.Serialization.Graph.GraphSON2
         }
 
         public CustomGraphSON2Reader(
-            Func<JToken, GraphNode> graphNodeFactory,
+            Func<JsonNode, GraphNode> graphNodeFactory,
             IReadOnlyDictionary<string, IGraphSONDeserializer> customDeserializers,
             IGraphSONReader reader)
             : this(
@@ -109,7 +109,7 @@ namespace Cassandra.Serialization.Graph.GraphSON2
         protected CustomGraphSON2Reader(
             Dictionary<string, IGraphSONDeserializer> deserializers,
             Dictionary<string, IGraphSONStructureDeserializer> structureDeserializers,
-            Func<JToken, GraphNode> graphNodeFactory,
+            Func<JsonNode, GraphNode> graphNodeFactory,
             IReadOnlyDictionary<string, IGraphSONDeserializer> customDeserializers,
             IGraphSONReader reader)
         {
@@ -126,27 +126,27 @@ namespace Cassandra.Serialization.Graph.GraphSON2
         private static Dictionary<string, IGraphSONStructureDeserializer> StructureDeserializers { get; } =
             new Dictionary<string, IGraphSONStructureDeserializer>();
 
-        protected Func<JToken, GraphNode> GraphNodeFactory { get; }
+        protected Func<JsonNode, GraphNode> GraphNodeFactory { get; }
 
         /// <summary>
         ///     Deserializes GraphSON to an object.
         /// </summary>
         /// <param name="jToken">The GraphSON to deserialize.</param>
         /// <returns>The deserialized object.</returns>
-        public dynamic ToObject(JToken jToken)
+        public dynamic ToObject(JsonNode jToken)
         {
-            if (IsNullOrUndefined(jToken))
+            if (jToken == null)
             {
                 return null;
             }
 
-            if (jToken is JArray)
+            if (jToken is JsonArray)
             {
-                return jToken.Select(t => ToObject(t));
+                return jToken.AsArray().Select(t => ToObject(t));
             }
-            if (jToken is JValue jValue)
+            if (jToken is JsonValue jValue)
             {
-                return jValue.Value;
+                return ExtractJsonValue(jValue);
             }
             if (!HasTypeKey(jToken))
             {
@@ -155,21 +155,24 @@ namespace Cassandra.Serialization.Graph.GraphSON2
             return ReadTypedValue(jToken, _reader);
         }
 
-        private bool HasTypeKey(JToken jToken)
+        private bool HasTypeKey(JsonNode jToken)
         {
-            var graphSONType = (string)jToken[GraphSONTokens.TypeKey];
-            return graphSONType != null;
+            if (jToken is JsonObject jObj && jObj.ContainsKey(GraphSONTokens.TypeKey))
+            {
+                return jObj[GraphSONTokens.TypeKey] != null;
+            }
+            return false;
         }
 
-        private dynamic ReadTypedValue(JToken typedValue, IGraphSONReader reader)
+        private dynamic ReadTypedValue(JsonNode typedValue, IGraphSONReader reader)
         {
             var value = typedValue[GraphSONTokens.ValueKey];
-            if (IsNullOrUndefined(value))
+            if (value == null)
             {
                 return null;
             }
 
-            var graphSONType = (string)typedValue[GraphSONTokens.TypeKey];
+            var graphSONType = typedValue[GraphSONTokens.TypeKey]?.ToString();
 
             if (_customDeserializers.TryGetValue(graphSONType, out var deserializer))
             {
@@ -189,22 +192,32 @@ namespace Cassandra.Serialization.Graph.GraphSON2
             throw new InvalidOperationException($"Deserializer for \"{graphSONType}\" not found");
         }
 
-        private dynamic ReadDictionary(JToken jtokenDict)
+        private dynamic ReadDictionary(JsonNode jtokenDict)
         {
             var dict = new Dictionary<string, dynamic>();
-            foreach (var e in jtokenDict)
+            if (jtokenDict is JsonObject jObj)
             {
-                var property = e as JProperty;
-                if (property == null)
-                    throw new InvalidOperationException($"Cannot read graphson: {jtokenDict}");
-                dict.Add(property.Name, ToObject(property.Value));
+                foreach (var kvp in jObj)
+                {
+                    dict.Add(kvp.Key, ToObject(kvp.Value));
+                }
+            }
+            else
+            {
+                throw new InvalidOperationException($"Cannot read graphson: {jtokenDict}");
             }
             return dict;
         }
 
-        private bool IsNullOrUndefined(JToken jToken)
+        private static object ExtractJsonValue(JsonValue jValue)
         {
-            return jToken.Type == JTokenType.Null || jToken.Type == JTokenType.Undefined;
+            if (jValue.TryGetValue<string>(out var s)) return s;
+            if (jValue.TryGetValue<long>(out var l)) return l;
+            if (jValue.TryGetValue<int>(out var i)) return i;
+            if (jValue.TryGetValue<double>(out var d)) return d;
+            if (jValue.TryGetValue<bool>(out var b)) return b;
+            if (jValue.TryGetValue<decimal>(out var dec)) return dec;
+            return jValue.ToString();
         }
     }
 }

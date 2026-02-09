@@ -14,17 +14,16 @@
 //   limitations under the License.
 // 
 
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace Cassandra.DataStax.Insights.Schema.StatusMessage
 {
-    [JsonObject]
     internal class NodeStatusInfo
     {
-        [JsonProperty("connections")]
+        [JsonPropertyName("connections")]
         public int Connections { get; set; }
 
-        [JsonProperty("inFlightQueries")]
+        [JsonPropertyName("inFlightQueries")]
         public int InFlightQueries { get; set; }
     }
 }

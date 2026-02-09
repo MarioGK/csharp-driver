@@ -14,17 +14,16 @@
 //   limitations under the License.
 // 
 
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace Cassandra.DataStax.Insights.Schema
 {
-    [JsonObject]
     internal class Insight<T>
     {
-        [JsonProperty("metadata")]
+        [JsonPropertyName("metadata")]
         public InsightsMetadata Metadata;
         
-        [JsonProperty("data")]
+        [JsonPropertyName("data")]
         public T Data;
     }
 }

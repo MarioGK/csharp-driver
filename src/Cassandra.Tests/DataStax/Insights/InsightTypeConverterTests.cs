@@ -15,10 +15,11 @@
 // 
 
 using System;
+using System.IO;
+using System.Text;
+using System.Text.Json;
 using Cassandra.DataStax.Insights.Schema;
 using Cassandra.DataStax.Insights.Schema.Converters;
-using Moq;
-using Newtonsoft.Json;
 using NUnit.Framework;
 
 namespace Cassandra.Tests.DataStax.Insights
@@ -29,19 +30,23 @@ namespace Cassandra.Tests.DataStax.Insights
         [Test]
         public void Should_WriteNull_When_NullObjectIsProvided()
         {
-            var mockWriter = Mock.Of<JsonWriter>();
-            var sut = new InsightTypeInsightsConverter();
-            sut.WriteJson(mockWriter, null, new JsonSerializer());
-            Mock.Get(mockWriter).Verify(mock => mock.WriteNull(), Times.Once);
+            var options = new JsonSerializerOptions();
+            options.Converters.Add(new InsightTypeInsightsConverter());
+            var json = JsonSerializer.Serialize<InsightType?>(null, options);
+            Assert.AreEqual("null", json);
         }
         
         [Test]
         public void Should_WriteEvent_When_EventEnumIsProvided()
         {
-            var mockWriter = Mock.Of<JsonWriter>();
             var sut = new InsightTypeInsightsConverter();
-            sut.WriteJson(mockWriter, InsightType.Event, new JsonSerializer());
-            Mock.Get(mockWriter).Verify(mock => mock.WriteValue((object)"EVENT"), Times.Once);
+            using var stream = new MemoryStream();
+            using (var writer = new Utf8JsonWriter(stream))
+            {
+                sut.Write(writer, InsightType.Event, new JsonSerializerOptions());
+            }
+            var json = Encoding.UTF8.GetString(stream.ToArray());
+            Assert.AreEqual("\"EVENT\"", json);
         }
         
         [Test]

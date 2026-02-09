@@ -15,6 +15,7 @@
 //
 
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Cassandra.DataStax.Graph
 {
@@ -33,7 +34,7 @@ namespace Cassandra.DataStax.Graph
         /// </summary>
         public ICollection<GraphNode> Objects { get; protected set; }
 
-        ICollection<IGraphNode> IPath.Objects => (ICollection<IGraphNode>) Objects;
+        ICollection<IGraphNode> IPath.Objects => Objects?.Cast<IGraphNode>().ToList();
 
         /// <summary>
         /// Creates a new instance of <see cref="Path"/>.

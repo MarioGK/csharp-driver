@@ -27,7 +27,7 @@ using System.Linq;
 using Cassandra.DataStax.Graph;
 using Cassandra.DataStax.Graph.Internal;
 using Cassandra.Serialization.Graph.Tinkerpop.Structure.IO.GraphSON;
-using Newtonsoft.Json.Linq;
+using System.Text.Json.Nodes;
 
 namespace Cassandra.Serialization.Graph.GraphSON2.Structure
 {
@@ -39,17 +39,17 @@ namespace Cassandra.Serialization.Graph.GraphSON2.Structure
         public static string TypeName => 
             GraphSONUtil.FormatTypeName(PathDeserializer.Prefix, PathDeserializer.TypeKey);
 
-        public dynamic Objectify(JToken token, Func<JToken, GraphNode> factory, IGraphSONReader reader)
+        public dynamic Objectify(JsonNode token, Func<JsonNode, GraphNode> factory, IGraphSONReader reader)
         {
             ICollection<ICollection<string>> labels = null;
             ICollection<GraphNode> objects = null;
-            if (token["labels"] is JArray labelsProp)
+            if (token["labels"] is JsonArray labelsProp)
             {
                 // labels prop is a js Array<Array<string>>
                 labels = labelsProp
                          .Select(node =>
                          {
-                             var arrayNode = node as JArray;
+                             var arrayNode = node as JsonArray;
                              if (arrayNode == null)
                              {
                                  throw new InvalidOperationException($"Cannot create a Path from {token}");
@@ -59,7 +59,7 @@ namespace Cassandra.Serialization.Graph.GraphSON2.Structure
                          .ToArray();
             }
 
-            if (token["objects"] is JArray objectsProp)
+            if (token["objects"] is JsonArray objectsProp)
             {
                 // labels prop is a js Array<object>
                 objects = objectsProp.Select(o => ToGraphNode(factory, o)).ToArray();

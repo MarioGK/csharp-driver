@@ -20,7 +20,7 @@ using System.Linq;
 using System.Reflection;
 using Cassandra.DataStax.Graph;
 using Cassandra.Serialization.Graph.GraphSON2;
-using Newtonsoft.Json.Linq;
+using System.Text.Json.Nodes;
 
 namespace Cassandra.Serialization.Graph.GraphSON3.Dse
 {
@@ -29,11 +29,11 @@ namespace Cassandra.Serialization.Graph.GraphSON3.Dse
     {
         /// <inheritdoc />
         public dynamic Objectify(
-            JToken graphsonObject, Type type, IGraphTypeSerializer serializer, IGenericSerializer genericSerializer)
+            JsonNode graphsonObject, Type type, IGraphTypeSerializer serializer, IGenericSerializer genericSerializer)
         {
             var keyspace = serializer.FromDb<string>(graphsonObject["keyspace"]);
             var name = serializer.FromDb<string>(graphsonObject["name"]);
-            var values = (JArray) graphsonObject["value"];
+            var values = (JsonArray) graphsonObject["value"];
 
             var targetTypeIsDictionary = false;
             Type elementType = null;
@@ -73,7 +73,7 @@ namespace Cassandra.Serialization.Graph.GraphSON3.Dse
             }
 
             var obj = readToDictionary 
-                ? ToDictionary(serializer, elementType, (JArray) graphsonObject["definition"], values) 
+                ? ToDictionary(serializer, elementType, (JsonArray) graphsonObject["definition"], values) 
                 : ToObject(serializer, udtMap, values);
             
             if (!serializer.ConvertFromDb(obj, type, out var result))
@@ -84,7 +84,7 @@ namespace Cassandra.Serialization.Graph.GraphSON3.Dse
             return result;
         }
         
-        internal object ToObject(IGraphTypeSerializer serializer, UdtMap map, IEnumerable<JToken> valuesArr)
+        internal object ToObject(IGraphTypeSerializer serializer, UdtMap map, IEnumerable<JsonNode> valuesArr)
         {
             var obj = Activator.CreateInstance(map.NetType);
             var i = 0;
@@ -113,7 +113,7 @@ namespace Cassandra.Serialization.Graph.GraphSON3.Dse
         }
         
         internal object ToDictionary(
-            IGraphTypeSerializer serializer, Type elementType, IEnumerable<JToken> definitions, IEnumerable<JToken> valuesArr)
+            IGraphTypeSerializer serializer, Type elementType, IEnumerable<JsonNode> definitions, IEnumerable<JsonNode> valuesArr)
         {
             var fieldNames = definitions.Select(def => (string) def["fieldName"]).ToArray();
             var newDictionary = (IDictionary)Activator.CreateInstance(typeof(Dictionary<,>).MakeGenericType(typeof(string), elementType));

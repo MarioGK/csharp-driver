@@ -25,7 +25,6 @@
 
 using System;
 using System.Runtime.CompilerServices;
-using System.Runtime.ConstrainedExecution;
 using System.Runtime.InteropServices;
 using Cassandra.DataStax.Auth.Sspi.Buffers;
 
@@ -126,12 +125,10 @@ namespace Cassandra.DataStax.Auth.Sspi.Contexts
             ref TimeStamp expiry
         );
 
-        [ReliabilityContract(Consistency.WillNotCorruptState, Cer.Success )]
         [DllImport( "Secur32.dll", EntryPoint = "DeleteSecurityContext", CharSet = CharSet.Unicode )]
         internal static extern SecurityStatus DeleteSecurityContext( ref RawSspiHandle contextHandle );
 
 
-        [ReliabilityContract(Consistency.WillNotCorruptState, Cer.MayFail )]
         [DllImport( "Secur32.dll", EntryPoint = "EncryptMessage", CharSet = CharSet.Unicode )]
         internal static extern SecurityStatus EncryptMessage(
             ref RawSspiHandle contextHandle,
@@ -140,7 +137,6 @@ namespace Cassandra.DataStax.Auth.Sspi.Contexts
             int sequenceNumber
         );
 
-        [ReliabilityContract( Consistency.WillNotCorruptState, Cer.MayFail )]
         [DllImport( "Secur32.dll", EntryPoint = "DecryptMessage", CharSet = CharSet.Unicode )]
         internal static extern SecurityStatus DecryptMessage(
             ref RawSspiHandle contextHandle,
@@ -149,7 +145,6 @@ namespace Cassandra.DataStax.Auth.Sspi.Contexts
             int qualityOfProtection
         );
 
-        [ReliabilityContract( Consistency.WillNotCorruptState, Cer.MayFail )]
         [DllImport( "Secur32.dll", EntryPoint = "MakeSignature", CharSet = CharSet.Unicode )]
         internal static extern SecurityStatus MakeSignature(
             ref RawSspiHandle contextHandle,
@@ -158,7 +153,6 @@ namespace Cassandra.DataStax.Auth.Sspi.Contexts
             int sequenceNumber
         );
 
-        [ReliabilityContract( Consistency.WillNotCorruptState, Cer.MayFail )]
         [DllImport( "Secur32.dll", EntryPoint = "VerifySignature", CharSet = CharSet.Unicode )]
         internal static extern SecurityStatus VerifySignature(
             ref RawSspiHandle contextHandle,
@@ -167,7 +161,6 @@ namespace Cassandra.DataStax.Auth.Sspi.Contexts
             int qualityOfProtection
         );
 
-        [ReliabilityContract( Consistency.WillNotCorruptState, Cer.Success )]
         [DllImport( "Secur32.dll", EntryPoint = "QueryContextAttributes", CharSet = CharSet.Unicode )]
         internal static extern SecurityStatus QueryContextAttributes_Sizes(
             ref RawSspiHandle contextHandle,
@@ -175,7 +168,6 @@ namespace Cassandra.DataStax.Auth.Sspi.Contexts
             ref SecPkgContext_Sizes sizes
         );
 
-        [ReliabilityContract( Consistency.WillNotCorruptState, Cer.Success)]
         [DllImport( "Secur32.dll", EntryPoint = "QueryContextAttributes", CharSet = CharSet.Unicode )]
         internal static extern SecurityStatus QueryContextAttributes_String(
             ref RawSspiHandle contextHandle,
@@ -183,16 +175,13 @@ namespace Cassandra.DataStax.Auth.Sspi.Contexts
             ref SecPkgContext_String names
         );
 
-        [ReliabilityContract( Consistency.WillNotCorruptState, Cer.Success )]
         [DllImport( "Secur32.dll", EntryPoint = "FreeContextBuffer", CharSet = CharSet.Unicode )]
         internal static extern SecurityStatus FreeContextBuffer( IntPtr handle );
 
 
-        [ReliabilityContract( Consistency.WillNotCorruptState, Cer.Success )]
         [DllImport( "Secur32.dll", EntryPoint = "ImpersonateSecurityContext", CharSet = CharSet.Unicode )]
         internal static extern SecurityStatus ImpersonateSecurityContext( ref RawSspiHandle contextHandle );
 
-        [ReliabilityContract( Consistency.WillNotCorruptState, Cer.Success )]
         [DllImport( "Secur32.dll", EntryPoint = "RevertSecurityContext", CharSet = CharSet.Unicode )]
         internal static extern SecurityStatus RevertSecurityContext( ref RawSspiHandle contextHandle );
 
@@ -214,7 +203,6 @@ namespace Cassandra.DataStax.Auth.Sspi.Contexts
             SecurityStatus status = SecurityStatus.InternalError;
             bool gotRef = false;
 
-            RuntimeHelpers.PrepareConstrainedRegions();
             try
             {
                 handle.DangerousAddRef( ref gotRef );
@@ -265,7 +253,6 @@ namespace Cassandra.DataStax.Auth.Sspi.Contexts
             SecurityStatus status = SecurityStatus.InvalidHandle;
             bool gotRef = false;
 
-            RuntimeHelpers.PrepareConstrainedRegions();
             try
             {
                 handle.DangerousAddRef( ref gotRef );
@@ -316,7 +303,6 @@ namespace Cassandra.DataStax.Auth.Sspi.Contexts
             bool gotRef = false;
             SecurityStatus status = SecurityStatus.InternalError;
 
-            RuntimeHelpers.PrepareConstrainedRegions();
             try
             {
                 handle.DangerousAddRef( ref gotRef );
@@ -367,7 +353,6 @@ namespace Cassandra.DataStax.Auth.Sspi.Contexts
             bool gotRef = false;
             SecurityStatus status = SecurityStatus.InternalError;
 
-            RuntimeHelpers.PrepareConstrainedRegions();
             try
             {
                 handle.DangerousAddRef( ref gotRef );

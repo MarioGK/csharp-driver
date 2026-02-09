@@ -31,7 +31,7 @@ using Cassandra.DataStax.Graph;
 using Cassandra.DataStax.Graph.Internal;
 using Cassandra.Serialization.Graph.GraphSON3.Tinkerpop;
 
-using Newtonsoft.Json;
+using System.Text.Json;
 
 namespace Cassandra.Serialization.Graph.Tinkerpop.Structure.IO.GraphSON
 {
@@ -103,7 +103,7 @@ namespace Cassandra.Serialization.Graph.Tinkerpop.Structure.IO.GraphSON
         /// <returns>The serialized GraphSON.</returns>
         public virtual string WriteObject(dynamic objectData)
         {
-            return JsonConvert.SerializeObject(ToDict(objectData));
+            return JsonSerializer.Serialize(ToDict(objectData));
         }
 
         /// <summary>
