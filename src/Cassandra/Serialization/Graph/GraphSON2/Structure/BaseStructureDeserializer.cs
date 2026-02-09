@@ -15,15 +15,15 @@
 
 using System;
 using Cassandra.DataStax.Graph;
-using Newtonsoft.Json.Linq;
+using System.Text.Json.Nodes;
 
 namespace Cassandra.Serialization.Graph.GraphSON2.Structure
 {
     internal abstract class BaseStructureDeserializer
     {
-        protected GraphNode ToGraphNode(Func<JToken, GraphNode> factory, JToken token, string propName, bool required = false)
+        protected GraphNode ToGraphNode(Func<JsonNode, GraphNode> factory, JsonNode token, string propName, bool required = false)
         {
-            var prop = !(token is JObject jobj) ? null : jobj[propName];
+            var prop = !(token is JsonObject jobj) ? null : jobj[propName];
             if (prop == null)
             {
                 if (!required)
@@ -36,14 +36,14 @@ namespace Cassandra.Serialization.Graph.GraphSON2.Structure
             return factory.Invoke(prop);
         }
 
-        protected GraphNode ToGraphNode(Func<JToken, GraphNode> factory, JToken token)
+        protected GraphNode ToGraphNode(Func<JsonNode, GraphNode> factory, JsonNode token)
         {
             return factory.Invoke(token);
         }
 
-        protected string ToString(JToken token, string propName, bool required = false)
+        protected string ToString(JsonNode token, string propName, bool required = false)
         {
-            var prop = !(token is JObject jobj) ? null : jobj[propName];
+            var prop = !(token is JsonObject jobj) ? null : jobj[propName];
             if (prop == null)
             {
                 if (!required)

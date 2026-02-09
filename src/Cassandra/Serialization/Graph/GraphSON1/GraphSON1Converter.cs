@@ -21,8 +21,8 @@ using System.Net;
 using System.Numerics;
 using Cassandra.DataStax.Graph;
 using Cassandra.Geometry;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 
 namespace Cassandra.Serialization.Graph.GraphSON1
 {
@@ -70,12 +70,12 @@ namespace Cassandra.Serialization.Graph.GraphSON1
             };
         }
 
-        private ReadDelegate GetTokenReader<T>(Func<JToken, T> tokenReader)
+        private ReadDelegate GetTokenReader<T>(Func<JsonNode, T> tokenReader)
         {
             object TokenReader(JTokenReader reader, JsonSerializer serializer)
             {
                 var token = reader.CurrentToken;
-                if (!(token is JObject))
+                if (!(token is JsonObject))
                 {
                     throw new InvalidOperationException($"Cannot create a {typeof(T).Name} from '{token}'");
                 }
@@ -102,7 +102,7 @@ namespace Cassandra.Serialization.Graph.GraphSON1
             return readHandler((JTokenReader)reader, serializer);
         }
 
-        protected override GraphNode ToGraphNode(JToken token)
+        protected override GraphNode ToGraphNode(JsonNode token)
         {
             return token == null ? null : new GraphNode(GraphSON1Node.CreateParsedNode(token));
         }

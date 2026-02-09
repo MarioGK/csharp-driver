@@ -23,7 +23,7 @@
 using System;
 using Cassandra.DataStax.Graph.Internal;
 using Cassandra.Serialization.Graph.Tinkerpop.Structure.IO.GraphSON;
-using Newtonsoft.Json.Linq;
+using System.Text.Json.Nodes;
 
 namespace Cassandra.Serialization.Graph.GraphSON2.Tinkerpop
 {
@@ -37,9 +37,9 @@ namespace Cassandra.Serialization.Graph.GraphSON2.Tinkerpop
         public static string TypeName =>
             GraphSONUtil.FormatTypeName(TinkerpopTimestampDeserializer.Prefix, TinkerpopTimestampDeserializer.TypeKey);
 
-        public dynamic Objectify(JToken graphsonObject, IGraphSONReader reader)
+        public dynamic Objectify(JsonNode graphsonObject, IGraphSONReader reader)
         {
-            var milliseconds = graphsonObject.ToObject<long>();
+            var milliseconds = graphsonObject.Deserialize<long>();
             return TinkerpopTimestampDeserializer.UnixStart.AddTicks(TimeSpan.TicksPerMillisecond * milliseconds);
         }
     }

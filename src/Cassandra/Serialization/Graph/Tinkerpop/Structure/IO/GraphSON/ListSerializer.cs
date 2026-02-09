@@ -23,7 +23,7 @@
 
 using System.Collections.Generic;
 using Cassandra.DataStax.Graph.Internal;
-using Newtonsoft.Json.Linq;
+using System.Text.Json.Nodes;
 
 namespace Cassandra.Serialization.Graph.Tinkerpop.Structure.IO.GraphSON
 {
@@ -31,9 +31,9 @@ namespace Cassandra.Serialization.Graph.Tinkerpop.Structure.IO.GraphSON
     {
         private static readonly IReadOnlyList<object> EmptyList = new object[0];
         
-        public dynamic Objectify(JToken graphsonObject, IGraphSONReader reader)
+        public dynamic Objectify(JsonNode graphsonObject, IGraphSONReader reader)
         {
-            var jArray = graphsonObject as JArray;
+            var jArray = graphsonObject as JsonArray;
             if (jArray == null)
             {
                 return ListSerializer.EmptyList;

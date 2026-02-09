@@ -14,7 +14,7 @@
 //    limitations under the License.
 
 using System;
-using Newtonsoft.Json.Linq;
+using System.Text.Json.Nodes;
 
 namespace Cassandra.Serialization.Graph.GraphSON3.Dse
 {
@@ -28,6 +28,6 @@ namespace Cassandra.Serialization.Graph.GraphSON3.Dse
         /// <param name="serializer">The graph type serializer instance.</param>
         /// <param name="genericSerializer">Generic serializer instance from which UDT Mappings can be obtained.</param>
         /// <returns>The deserialized object.</returns>
-        dynamic Objectify(JToken graphsonObject, Type type, IGraphTypeSerializer serializer, IGenericSerializer genericSerializer);
+        dynamic Objectify(JsonNode graphsonObject, Type type, IGraphTypeSerializer serializer, IGenericSerializer genericSerializer);
     }
 }

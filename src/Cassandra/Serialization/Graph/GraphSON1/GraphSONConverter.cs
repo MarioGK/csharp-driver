@@ -19,8 +19,8 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using Cassandra.DataStax.Graph;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 
 namespace Cassandra.Serialization.Graph.GraphSON1
 {
@@ -33,9 +33,9 @@ namespace Cassandra.Serialization.Graph.GraphSON1
 
         protected delegate void WriteDelegate(JsonWriter writer, object value, JsonSerializer serializer);
 
-        protected abstract GraphNode ToGraphNode(JToken token);
+        protected abstract GraphNode ToGraphNode(JsonNode token);
 
-        private GraphNode ToGraphNode(JToken token, string propName, bool required = false)
+        private GraphNode ToGraphNode(JsonNode token, string propName, bool required = false)
         {
             var prop = token[propName];
             if (prop == null)
@@ -49,7 +49,7 @@ namespace Cassandra.Serialization.Graph.GraphSON1
             return ToGraphNode(prop);
         }
 
-        private string ToString(JToken token, string propName, bool required = false)
+        private string ToString(JsonNode token, string propName, bool required = false)
         {
             var prop = token[propName];
             if (prop == null)
@@ -63,10 +63,10 @@ namespace Cassandra.Serialization.Graph.GraphSON1
             return prop.ToString();
         }
 
-        protected Vertex ToVertex(JToken token)
+        protected Vertex ToVertex(JsonNode token)
         {
             var properties = GraphSONConverter.EmptyProperties;
-            var propertiesJsonProp = token["properties"] as JObject;
+            var propertiesJsonProp = token["properties"] as JsonObject;
             if (propertiesJsonProp != null)
             {
                 properties = propertiesJsonProp
@@ -79,10 +79,10 @@ namespace Cassandra.Serialization.Graph.GraphSON1
                 properties);
         }
 
-        protected Edge ToEdge(JToken token)
+        protected Edge ToEdge(JsonNode token)
         {
             var properties = GraphSONConverter.EmptyProperties;
-            var propertiesJsonProp = token["properties"] as JObject;
+            var propertiesJsonProp = token["properties"] as JsonObject;
             if (propertiesJsonProp != null)
             {
                 properties = propertiesJsonProp
@@ -99,18 +99,18 @@ namespace Cassandra.Serialization.Graph.GraphSON1
                 ToString(token, "outVLabel"));
         }
 
-        protected Path ToPath(JToken token)
+        protected Path ToPath(JsonNode token)
         {
             ICollection<ICollection<string>> labels = null;
             ICollection<GraphNode> objects = null;
-            var labelsProp = token["labels"] as JArray;
+            var labelsProp = token["labels"] as JsonArray;
             if (labelsProp != null)
             {
                 // labels prop is a js Array<Array<string>>
                 labels = labelsProp
                     .Select(node =>
                     {
-                        var arrayNode = node as JArray;
+                        var arrayNode = node as JsonArray;
                         if (arrayNode == null)
                         {
                             throw new InvalidOperationException($"Cannot create an Path from {token}");
@@ -119,7 +119,7 @@ namespace Cassandra.Serialization.Graph.GraphSON1
                     })
                     .ToArray();
             }
-            var objectsProp = token["objects"] as JArray;
+            var objectsProp = token["objects"] as JsonArray;
             if (objectsProp != null)
             {
                 // labels prop is a js Array<object>
@@ -128,7 +128,7 @@ namespace Cassandra.Serialization.Graph.GraphSON1
             return new Path(labels, objects);
         }
 
-        protected IVertexProperty ToVertexProperty(JToken token)
+        protected IVertexProperty ToVertexProperty(JsonNode token)
         {
             var graphNode = ToGraphNode(token);
             return new VertexProperty(
@@ -138,7 +138,7 @@ namespace Cassandra.Serialization.Graph.GraphSON1
                 graphNode.Get<GraphNode>("properties")?.GetProperties() ?? GraphSONConverter.EmptyProperties);
         }
 
-        protected IProperty ToProperty(JToken token)
+        protected IProperty ToProperty(JsonNode token)
         {
             return new Property(
                 ToString(token, "key", true),

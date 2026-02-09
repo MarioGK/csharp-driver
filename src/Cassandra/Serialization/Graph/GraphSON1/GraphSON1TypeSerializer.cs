@@ -15,8 +15,8 @@
 
 using System;
 using Cassandra.DataStax.Graph;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 
 namespace Cassandra.Serialization.Graph.GraphSON1
 {
@@ -35,17 +35,17 @@ namespace Cassandra.Serialization.Graph.GraphSON1
             return GraphSON1TypeSerializer.RowParser;
         }
 
-        public object FromDb(JToken token, Type type)
+        public object FromDb(JsonNode token, Type type)
         {
             throw new InvalidOperationException("Not supported.");
         }
 
-        public object FromDb(JToken token, Type type, bool deserializeGraphNodes)
+        public object FromDb(JsonNode token, Type type, bool deserializeGraphNodes)
         {
             throw new InvalidOperationException("Not supported.");
         }
 
-        public T FromDb<T>(JToken token)
+        public T FromDb<T>(JsonNode token)
         {
             throw new InvalidOperationException("Not supported.");
         }

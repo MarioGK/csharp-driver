@@ -25,7 +25,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using Cassandra.DataStax.Graph.Internal;
-using Newtonsoft.Json.Linq;
+using System.Text.Json.Nodes;
 
 namespace Cassandra.Serialization.Graph.Tinkerpop.Structure.IO.GraphSON
 {
@@ -36,7 +36,7 @@ namespace Cassandra.Serialization.Graph.Tinkerpop.Structure.IO.GraphSON
         protected virtual string Prefix => "g";
         protected virtual bool StringifyValue => false;
 
-        public dynamic Objectify(JToken graphsonObject, IGraphSONReader reader)
+        public dynamic Objectify(JsonNode graphsonObject, IGraphSONReader reader)
         {
             return graphsonObject.ToObject(HandledType);
         }

@@ -25,7 +25,7 @@ using Cassandra.Serialization.Graph.GraphSON2.Tinkerpop;
 using Cassandra.Serialization.Graph.GraphSON3.Tinkerpop;
 using Cassandra.Serialization.Graph.Tinkerpop.Structure.IO.GraphSON;
 
-using Newtonsoft.Json.Linq;
+using System.Text.Json.Nodes;
 
 namespace Cassandra.Serialization.Graph.GraphSON2
 {
@@ -94,7 +94,7 @@ namespace Cassandra.Serialization.Graph.GraphSON2
         }
 
         public CustomGraphSON2Reader(
-            Func<JToken, GraphNode> graphNodeFactory,
+            Func<JsonNode, GraphNode> graphNodeFactory,
             IReadOnlyDictionary<string, IGraphSONDeserializer> customDeserializers,
             IGraphSONReader reader)
             : this(
@@ -109,7 +109,7 @@ namespace Cassandra.Serialization.Graph.GraphSON2
         protected CustomGraphSON2Reader(
             Dictionary<string, IGraphSONDeserializer> deserializers,
             Dictionary<string, IGraphSONStructureDeserializer> structureDeserializers,
-            Func<JToken, GraphNode> graphNodeFactory,
+            Func<JsonNode, GraphNode> graphNodeFactory,
             IReadOnlyDictionary<string, IGraphSONDeserializer> customDeserializers,
             IGraphSONReader reader)
         {
@@ -126,25 +126,25 @@ namespace Cassandra.Serialization.Graph.GraphSON2
         private static Dictionary<string, IGraphSONStructureDeserializer> StructureDeserializers { get; } =
             new Dictionary<string, IGraphSONStructureDeserializer>();
 
-        protected Func<JToken, GraphNode> GraphNodeFactory { get; }
+        protected Func<JsonNode, GraphNode> GraphNodeFactory { get; }
 
         /// <summary>
         ///     Deserializes GraphSON to an object.
         /// </summary>
         /// <param name="jToken">The GraphSON to deserialize.</param>
         /// <returns>The deserialized object.</returns>
-        public dynamic ToObject(JToken jToken)
+        public dynamic ToObject(JsonNode jToken)
         {
             if (IsNullOrUndefined(jToken))
             {
                 return null;
             }
 
-            if (jToken is JArray)
+            if (jToken is JsonArray)
             {
                 return jToken.Select(t => ToObject(t));
             }
-            if (jToken is JValue jValue)
+            if (jToken is JsonValue jValue)
             {
                 return jValue.Value;
             }
@@ -155,13 +155,13 @@ namespace Cassandra.Serialization.Graph.GraphSON2
             return ReadTypedValue(jToken, _reader);
         }
 
-        private bool HasTypeKey(JToken jToken)
+        private bool HasTypeKey(JsonNode jToken)
         {
             var graphSONType = (string)jToken[GraphSONTokens.TypeKey];
             return graphSONType != null;
         }
 
-        private dynamic ReadTypedValue(JToken typedValue, IGraphSONReader reader)
+        private dynamic ReadTypedValue(JsonNode typedValue, IGraphSONReader reader)
         {
             var value = typedValue[GraphSONTokens.ValueKey];
             if (IsNullOrUndefined(value))
@@ -189,7 +189,7 @@ namespace Cassandra.Serialization.Graph.GraphSON2
             throw new InvalidOperationException($"Deserializer for \"{graphSONType}\" not found");
         }
 
-        private dynamic ReadDictionary(JToken jtokenDict)
+        private dynamic ReadDictionary(JsonNode jtokenDict)
         {
             var dict = new Dictionary<string, dynamic>();
             foreach (var e in jtokenDict)
@@ -202,7 +202,7 @@ namespace Cassandra.Serialization.Graph.GraphSON2
             return dict;
         }
 
-        private bool IsNullOrUndefined(JToken jToken)
+        private bool IsNullOrUndefined(JsonNode jToken)
         {
             return jToken.Type == JTokenType.Null || jToken.Type == JTokenType.Undefined;
         }

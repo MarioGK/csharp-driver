@@ -14,38 +14,20 @@
 //   limitations under the License.
 //
 
-using System;
-using System.Globalization;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace Cassandra.Serialization.Graph.GraphSON1
 {
-    internal class GraphSON1ContractResolver : DefaultContractResolver
+    internal static class GraphSON1ContractResolver
     {
         /// <summary>
-        /// A single instance of a JsonSerializerSettings that uses this ContractResolver.
+        /// A single instance of a JsonSerializerOptions with equivalent settings.
         /// </summary>
-        internal static readonly JsonSerializerSettings Settings = new JsonSerializerSettings
+        internal static readonly JsonSerializerOptions Options = new JsonSerializerOptions
         {
-            ContractResolver = new GraphSON1ContractResolver(),
-            DateParseHandling = DateParseHandling.None,
-            Culture = CultureInfo.InvariantCulture
+            PropertyNameCaseInsensitive = true,
+            NumberHandling = JsonNumberHandling.AllowReadingFromString,
         };
-
-        protected GraphSON1ContractResolver()
-        {
-
-        }
-
-        protected override JsonContract CreateContract(Type objectType)
-        {
-            var contract = base.CreateContract(objectType);
-            if (GraphSON1Converter.Instance.CanConvert(objectType))
-            {
-                contract.Converter = GraphSON1Converter.Instance;
-            }
-            return contract;
-        }
     }
 }
