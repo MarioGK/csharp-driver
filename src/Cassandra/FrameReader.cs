@@ -91,7 +91,8 @@ namespace Cassandra
         private string ReadStringByLength(int length)
         {
             var bytes = new byte[length];
-            _stream.ReadExactly(bytes, 0, length);            return Encoding.UTF8.GetString(bytes);
+            _stream.ReadExactly(bytes, 0, length);
+            return Encoding.UTF8.GetString(bytes);
         }
 
         /// <summary>
