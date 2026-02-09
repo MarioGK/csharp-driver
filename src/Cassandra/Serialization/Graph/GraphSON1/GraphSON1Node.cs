@@ -21,20 +21,16 @@ using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.Serialization;
-
-using Cassandra.DataStax.Graph;
-
 using System.Text.Json;
 using System.Text.Json.Nodes;
+
+using Cassandra.DataStax.Graph;
 
 namespace Cassandra.Serialization.Graph.GraphSON1
 {
     internal class GraphSON1Node : INode
     {
-        private static readonly JsonSerializer Serializer =
-            JsonSerializer.CreateDefault(GraphSON1ContractResolver.Settings);
-
-        private static readonly JTokenEqualityComparer Comparer = new JTokenEqualityComparer();
+        private static readonly JsonSerializerOptions SerializerOptions = GraphSON1ContractResolver.Options;
 
         private readonly JsonNode _token;
 
@@ -54,9 +50,10 @@ namespace Cassandra.Serialization.Graph.GraphSON1
             {
                 throw new ArgumentNullException(nameof(json));
             }
-            var parsedJson = (JsonObject)JsonConvert.DeserializeObject(json, GraphSON1ContractResolver.Settings);
+            var parsedJson = JsonNode.Parse(json)?.AsObject();
             _token = parsedJson["result"];
-            Bulk = parsedJson.Value<long?>("bulk") ?? 1L;
+            var bulkNode = parsedJson["bulk"];
+            Bulk = bulkNode != null ? bulkNode.Deserialize<long>() : 1L;
 
             if (validateGraphson2)
             {
@@ -81,24 +78,10 @@ namespace Cassandra.Serialization.Graph.GraphSON1
             return new GraphSON1Node(parsedGraphItem);
         }
 
-        internal static GraphSON1Node CreateParsedNode(JsonNode parsedGraphItem)
-        {
-            if (parsedGraphItem == null)
-            {
-                throw new ArgumentNullException(nameof(parsedGraphItem));
-            }
-            var jToken = JsonNode.Parse(parsedGraphItem.ToJsonString());
-            return new GraphSON1Node(jToken);
-        }
-
         internal static JsonNode ConvertToJsonNode(object value)
         {
             if (value == null) return null;
             if (value is JsonNode node) return node;
-            if (value is JsonNode jToken)
-            {
-                return JsonNode.Parse(jToken.ToString(Formatting.None));
-            }
             if (value is IEnumerable<object> enumerable)
             {
                 var arr = new JsonArray();
@@ -108,7 +91,7 @@ namespace Cassandra.Serialization.Graph.GraphSON1
                 }
                 return arr;
             }
-            return System.Text.Json.JsonSerializer.SerializeToNode(value);
+            return JsonSerializer.SerializeToNode(value);
         }
 
         public T Get<T>(string propertyName, bool throwIfNotFound)
@@ -131,15 +114,14 @@ namespace Cassandra.Serialization.Graph.GraphSON1
         {
             if (!(_token is JsonObject))
             {
-                if (_token is JsonValue)
+                if (_token is JsonValue jv)
                 {
-                    throw new KeyNotFoundException("Cannot retrieve properties of scalar value of type '{0}'" + ((JsonValue)_token).Type);
+                    throw new KeyNotFoundException("Cannot retrieve properties of scalar value of type '{0}'" + jv.GetValueKind());
                 }
                 throw new KeyNotFoundException("Cannot retrieve properties of scalar value");
             }
             var graphObject = (JsonObject)_token;
-            var property = graphObject.Property(name);
-            if (property == null)
+            if (!graphObject.TryGetPropertyValue(name, out var propertyValue))
             {
                 if (throwIfNotFound)
                 {
@@ -147,7 +129,7 @@ namespace Cassandra.Serialization.Graph.GraphSON1
                 }
                 return null;
             }
-            return property.Value;
+            return propertyValue;
         }
 
         /// <summary>
@@ -183,9 +165,9 @@ namespace Cassandra.Serialization.Graph.GraphSON1
                     if (type == typeof(TimeUuid))
                     {
                         // TimeUuid is not Serializable but convertible from Uuid
-                        return (TimeUuid)token.Deserialize<Guid>();
+                        return (TimeUuid)token.Deserialize<Guid>(SerializerOptions);
                     }
-                    return token.ToObject(type, Serializer);
+                    return token.Deserialize(type, SerializerOptions);
                 }
                 if (token is JsonArray)
                 {
@@ -202,13 +184,9 @@ namespace Cassandra.Serialization.Graph.GraphSON1
                     return ToArray((JsonArray)token, elementType);
                 }
             }
-            catch (JsonSerializationException ex)
+            catch (JsonException ex)
             {
                 throw new NotSupportedException($"Type {type} is not supported", ex);
-            }
-            catch (JsonReaderException ex)
-            {
-                throw new InvalidOperationException($"Could not convert to {type}: {token}", ex);
             }
             throw new NotSupportedException($"Token of type {token.GetType()} is not supported");
         }
@@ -218,9 +196,14 @@ namespace Cassandra.Serialization.Graph.GraphSON1
         /// </summary>
         private object GetTokenValue(JsonNode token)
         {
-            if (token is JsonValue)
+            if (token is JsonValue jv)
             {
-                return ((JsonValue)token).Value;
+                // Try to extract the underlying value
+                if (jv.TryGetValue<string>(out var s)) return s;
+                if (jv.TryGetValue<long>(out var l)) return l;
+                if (jv.TryGetValue<double>(out var d)) return d;
+                if (jv.TryGetValue<bool>(out var b)) return b;
+                return jv.ToString();
             }
             if (token is JsonObject)
             {
@@ -239,11 +222,11 @@ namespace Cassandra.Serialization.Graph.GraphSON1
         /// <exception cref="InvalidOperationException">When the underlying value is not an object tree</exception>
         public bool HasProperty(string name)
         {
-            if (!(_token is JsonObject))
+            if (!(_token is JsonObject jobj))
             {
                 return false;
             }
-            return ((JsonObject)_token).Property(name) != null;
+            return jobj.ContainsKey(name);
         }
 
         public string GetGraphSONType()
@@ -265,7 +248,7 @@ namespace Cassandra.Serialization.Graph.GraphSON1
         /// </summary>
         public override int GetHashCode()
         {
-            return Comparer.GetHashCode(_token);
+            return _token?.ToJsonString()?.GetHashCode() ?? 0;
         }
 
         /// <inheritdoc />
@@ -275,9 +258,9 @@ namespace Cassandra.Serialization.Graph.GraphSON1
             {
                 throw new NotSupportedException("Deserialization of GraphNodes that don't represent object trees is not supported");
             }
-            foreach (var prop in ((JsonObject)_token).Properties())
+            foreach (var prop in (JsonObject)_token)
             {
-                info.AddValue(prop.Name, prop.Value);
+                info.AddValue(prop.Key, prop.Value);
             }
         }
 
@@ -299,13 +282,12 @@ namespace Cassandra.Serialization.Graph.GraphSON1
 
         private IDictionary<string, T> GetProperties<T>(JsonNode item) where T : class, IGraphNode
         {
-            if (!(item is JsonObject))
+            if (!(item is JsonObject jobj))
             {
                 throw new InvalidOperationException($"Can not get properties from '{item}'");
             }
-            return ((JsonObject)item)
-                .Properties()
-                .ToDictionary(prop => prop.Name, prop => new GraphNode(new GraphSON1Node(prop.Value)) as T);
+            return jobj
+                .ToDictionary(prop => prop.Key, prop => new GraphNode(new GraphSON1Node(prop.Value)) as T);
         }
 
         /// <summary>
@@ -342,7 +324,7 @@ namespace Cassandra.Serialization.Graph.GraphSON1
             {
                 var value = isGraphNode
                     ? new GraphNode(new GraphSON1Node(jArray[i]))
-                    : jArray[i].ToObject(elementType, Serializer);
+                    : jArray[i].Deserialize(elementType, SerializerOptions);
                 arr.SetValue(value, i);
             }
             return arr;
@@ -367,10 +349,10 @@ namespace Cassandra.Serialization.Graph.GraphSON1
         {
             if (_token is JsonValue val)
             {
-                return val.ToString(CultureInfo.InvariantCulture);
+                return val.ToString();
             }
 
-            return _token.ToString();
+            return _token?.ToJsonString() ?? string.Empty;
         }
 
         public void WriteJson(Utf8JsonWriter writer, JsonSerializerOptions options)
@@ -380,7 +362,7 @@ namespace Cassandra.Serialization.Graph.GraphSON1
                 throw new NotSupportedException(
                     "Deserialization of GraphNodes that don't represent object trees is not supported");
             }
-            var json = _token.ToString(Formatting.None);
+            var json = _token.ToJsonString();
             using var doc = JsonDocument.Parse(json);
             doc.RootElement.WriteTo(writer);
         }
