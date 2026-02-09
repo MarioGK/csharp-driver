@@ -31,7 +31,7 @@ namespace Cassandra.Serialization.Graph.Tinkerpop.Structure.IO.GraphSON
     {
         public dynamic Objectify(JsonNode graphsonObject, IGraphSONReader reader)
         {
-            return graphsonObject.Deserialize<Guid>();
+            return graphsonObject.GetValue<Guid>();
         }
     }
 }

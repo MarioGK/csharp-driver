@@ -39,7 +39,7 @@ namespace Cassandra.Serialization.Graph.GraphSON2.Tinkerpop
 
         public dynamic Objectify(JsonNode graphsonObject, IGraphSONReader reader)
         {
-            var milliseconds = graphsonObject.Deserialize<long>();
+            var milliseconds = graphsonObject.GetValue<long>();
             return TinkerpopDateDeserializer.UnixStart.AddTicks(TimeSpan.TicksPerMillisecond * milliseconds);
         }
     }

@@ -203,7 +203,6 @@ namespace Cassandra.DataStax.Auth.Sspi.Contexts
             SecurityStatus status = SecurityStatus.InternalError;
             bool gotRef = false;
 
-            RuntimeHelpers.PrepareConstrainedRegions();
             try
             {
                 handle.DangerousAddRef( ref gotRef );
@@ -254,7 +253,6 @@ namespace Cassandra.DataStax.Auth.Sspi.Contexts
             SecurityStatus status = SecurityStatus.InvalidHandle;
             bool gotRef = false;
 
-            RuntimeHelpers.PrepareConstrainedRegions();
             try
             {
                 handle.DangerousAddRef( ref gotRef );
@@ -305,7 +303,6 @@ namespace Cassandra.DataStax.Auth.Sspi.Contexts
             bool gotRef = false;
             SecurityStatus status = SecurityStatus.InternalError;
 
-            RuntimeHelpers.PrepareConstrainedRegions();
             try
             {
                 handle.DangerousAddRef( ref gotRef );
@@ -356,7 +353,6 @@ namespace Cassandra.DataStax.Auth.Sspi.Contexts
             bool gotRef = false;
             SecurityStatus status = SecurityStatus.InternalError;
 
-            RuntimeHelpers.PrepareConstrainedRegions();
             try
             {
                 handle.DangerousAddRef( ref gotRef );

@@ -47,8 +47,7 @@ namespace Cassandra.Serialization.Graph.GraphSON2.Structure
             if (tokenProperties != null && tokenProperties is JsonObject propertiesJsonProp)
             {
                 properties = propertiesJsonProp
-                             .Properties()
-                             .ToDictionary(prop => prop.Name, prop => ToGraphNode(factory, prop.Value));
+                             .ToDictionary(kvp => kvp.Key, kvp => ToGraphNode(factory, kvp.Value));
             }
 
             var label = ToString(token, "label", false) ?? VertexDeserializer.DefaultLabel;

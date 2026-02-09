@@ -103,7 +103,7 @@ namespace Cassandra.Serialization.Graph.Tinkerpop.Structure.IO.GraphSON
         /// <returns>The serialized GraphSON.</returns>
         public virtual string WriteObject(dynamic objectData)
         {
-            return JsonConvert.SerializeObject(ToDict(objectData));
+            return JsonSerializer.Serialize(ToDict(objectData));
         }
 
         /// <summary>

@@ -102,13 +102,13 @@ namespace Cassandra.Serialization.Graph.Tinkerpop.Structure.IO.GraphSON
         /// <returns>The deserialized object.</returns>
         public virtual dynamic ToObject(JsonNode jToken)
         {
-            if (jToken is JsonArray)
+            if (jToken is JsonArray jArray)
             {
-                return jToken.Select(t => ToObject(t));
+                return jArray.Select(t => ToObject(t));
             }
             if (jToken is JsonValue jValue)
             {
-                return jValue.Value;
+                return jValue.GetValue<object>();
             }
             if (!HasTypeKey(jToken))
             {
@@ -136,12 +136,9 @@ namespace Cassandra.Serialization.Graph.Tinkerpop.Structure.IO.GraphSON
         private dynamic ReadDictionary(JsonNode jtokenDict)
         {
             var dict = new Dictionary<string, dynamic>();
-            foreach (var e in jtokenDict)
+            foreach (var e in (JsonObject)jtokenDict)
             {
-                var property = e as JProperty;
-                if (property == null)
-                    throw new InvalidOperationException($"Cannot read graphson: {jtokenDict}");
-                dict.Add(property.Name, ToObject(property.Value));
+                dict.Add(e.Key, ToObject(e.Value));
             }
             return dict;
         }

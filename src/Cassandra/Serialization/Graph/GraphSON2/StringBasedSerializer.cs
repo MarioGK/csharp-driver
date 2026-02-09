@@ -49,7 +49,7 @@ namespace Cassandra.Serialization.Graph.GraphSON2
 
         protected virtual string TokenToString(JsonNode token)
         {
-            return token.Deserialize<string>();
+            return token.GetValue<string>();
         }
         
         protected abstract string ToString(dynamic obj);

@@ -25,6 +25,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using Cassandra.DataStax.Graph.Internal;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 
 namespace Cassandra.Serialization.Graph.Tinkerpop.Structure.IO.GraphSON
@@ -38,7 +39,7 @@ namespace Cassandra.Serialization.Graph.Tinkerpop.Structure.IO.GraphSON
 
         public dynamic Objectify(JsonNode graphsonObject, IGraphSONReader reader)
         {
-            return graphsonObject.ToObject(HandledType);
+            return JsonSerializer.Deserialize(graphsonObject, HandledType);
         }
 
         public Dictionary<string, dynamic> Dictify(dynamic objectData, IGraphSONWriter writer)

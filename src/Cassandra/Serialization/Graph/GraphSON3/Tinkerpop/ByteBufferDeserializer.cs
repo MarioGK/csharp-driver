@@ -37,7 +37,7 @@ namespace Cassandra.Serialization.Graph.GraphSON3.Tinkerpop
 
         public dynamic Objectify(JsonNode graphsonObject, IGraphSONReader reader)
         {
-            var base64String = graphsonObject.Deserialize<string>();
+            var base64String = graphsonObject.GetValue<string>();
             return Convert.FromBase64String(base64String);
         }
     }
