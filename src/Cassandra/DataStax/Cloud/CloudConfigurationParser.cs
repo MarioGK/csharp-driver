@@ -32,7 +32,14 @@ namespace Cassandra.DataStax.Cloud
             using (var configStream = new StreamReader(stream))
             {
                 var json = configStream.ReadToEnd();
-                cloudConfiguration = JsonSerializer.Deserialize<CloudConfiguration>(json);
+                if (string.IsNullOrWhiteSpace(json))
+                {
+                    cloudConfiguration = null;
+                }
+                else
+                {
+                    cloudConfiguration = JsonSerializer.Deserialize<CloudConfiguration>(json);
+                }
             }
 
             ValidateConfiguration(cloudConfiguration);

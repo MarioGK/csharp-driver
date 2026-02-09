@@ -183,7 +183,7 @@ namespace Cassandra.DataStax.Insights
         {
             var queryProtocolOptions = new QueryProtocolOptions(
                 ConsistencyLevel.One,
-                new object[] { JsonSerializer.Serialize(message, new JsonSerializerOptions { DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull }) },
+                new object[] { JsonSerializer.Serialize(message, new JsonSerializerOptions { DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull, IncludeFields = true }) },
                 false,
                 0,
                 null,

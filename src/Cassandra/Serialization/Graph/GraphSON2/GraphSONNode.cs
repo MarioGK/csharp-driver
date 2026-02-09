@@ -266,6 +266,10 @@ namespace Cassandra.Serialization.Graph.GraphSON2
         {
             if (_token is JsonValue val)
             {
+                if (val.TryGetValue<string>(out var s))
+                {
+                    return s;
+                }
                 return val.ToString();
             }
 
@@ -279,6 +283,10 @@ namespace Cassandra.Serialization.Graph.GraphSON2
                         return string.Empty;
 
                     case JsonValue tokenValueVal:
+                        if (tokenValueVal.TryGetValue<string>(out var sv))
+                        {
+                            return sv;
+                        }
                         return tokenValueVal.ToString();
 
                     default:

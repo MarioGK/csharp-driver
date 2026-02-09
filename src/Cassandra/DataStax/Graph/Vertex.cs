@@ -29,11 +29,15 @@ namespace Cassandra.DataStax.Graph
         /// Creates a new <see cref="Vertex"/> instance.
         /// </summary>
         public Vertex(GraphNode id, string label, IDictionary<string, GraphNode> properties) 
-            : base(id, label, properties)
+            : base(id, label, properties ?? new Dictionary<string, GraphNode>())
         {
-            if (properties == null)
+            if (id == null)
             {
-                throw new ArgumentNullException(nameof(properties));
+                throw new InvalidOperationException("Vertex is missing required property 'id'.");
+            }
+            if (label == null)
+            {
+                throw new InvalidOperationException("Vertex is missing required property 'label'.");
             }
         }
 

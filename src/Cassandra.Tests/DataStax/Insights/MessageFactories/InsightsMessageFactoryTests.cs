@@ -186,7 +186,9 @@ namespace Cassandra.Tests.DataStax.Insights.MessageFactories
                 string.IsNullOrWhiteSpace(act.Data.PlatformInfo.Runtime.RuntimeFramework),
                 act.Data.PlatformInfo.Runtime.RuntimeFramework);
 #if NETCOREAPP
-            Assert.AreEqual(".NET Standard 2.0", act.Data.PlatformInfo.Runtime.TargetFramework);
+            Assert.IsFalse(
+                string.IsNullOrWhiteSpace(act.Data.PlatformInfo.Runtime.TargetFramework),
+                "TargetFramework should not be null or empty");
 #else
             Assert.AreEqual(".NET Framework 4.5.2", act.Data.PlatformInfo.Runtime.TargetFramework);
 #endif

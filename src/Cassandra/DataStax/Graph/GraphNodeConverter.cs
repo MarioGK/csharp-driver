@@ -29,8 +29,27 @@ namespace Cassandra.DataStax.Graph
 
         public override GraphNode Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
-            var jsonObject = JsonNode.Parse(ref reader)?.AsObject();
-            return new GraphNode(jsonObject);
+            var jsonNode = JsonNode.Parse(ref reader);
+            if (jsonNode is JsonObject jsonObject)
+            {
+                return new GraphNode(jsonObject);
+            }
+            // For non-object values (arrays, scalars), wrap in a result object so GraphSON1Node can parse
+            var wrapper = new JsonObject { ["result"] = jsonNode };
+            return new GraphNode(wrapper.ToJsonString());
+        }
+    }
+
+    internal class GraphNodeConverterFactory : JsonConverterFactory
+    {
+        public override bool CanConvert(Type typeToConvert)
+        {
+            return typeToConvert == typeof(IGraphNode) || typeToConvert == typeof(GraphNode);
+        }
+
+        public override JsonConverter CreateConverter(Type typeToConvert, JsonSerializerOptions options)
+        {
+            return new GraphNodeConverter();
         }
     }
 }

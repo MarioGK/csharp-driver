@@ -24,13 +24,13 @@ namespace Cassandra.DataStax.Cloud
     internal class CloudConfiguration : IEquatable<CloudConfiguration>
     {
         [JsonPropertyName("host")]
-        public string Host { get; private set; }
+        public string Host { get; init; }
 
         [JsonPropertyName("port")]
-        public int Port { get; private set; }
+        public int Port { get; init; }
         
         [JsonPropertyName("pfxCertPassword")]
-        public string CertificatePassword { get; private set; }
+        public string CertificatePassword { get; init; }
 
         public override bool Equals(object obj)
         {

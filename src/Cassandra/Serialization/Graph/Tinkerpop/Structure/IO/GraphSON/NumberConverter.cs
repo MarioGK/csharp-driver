@@ -39,6 +39,11 @@ namespace Cassandra.Serialization.Graph.Tinkerpop.Structure.IO.GraphSON
 
         public dynamic Objectify(JsonNode graphsonObject, IGraphSONReader reader)
         {
+            // Some number types (like BigDecimal) are serialized as strings in GraphSON
+            if (graphsonObject is JsonValue jv && jv.TryGetValue<string>(out var strVal))
+            {
+                return Convert.ChangeType(strVal, HandledType, CultureInfo.InvariantCulture);
+            }
             return JsonSerializer.Deserialize(graphsonObject, HandledType);
         }
 

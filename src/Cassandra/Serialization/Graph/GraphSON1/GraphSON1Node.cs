@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Dynamic;
 using System.Globalization;
 using System.Linq;
+using System.Numerics;
 using System.Reflection;
 using System.Runtime.Serialization;
 using System.Text.Json;
@@ -160,15 +161,49 @@ namespace Cassandra.Serialization.Graph.GraphSON1
                 {
                     return new GraphNode(new GraphSON1Node(token));
                 }
-                if (token is JsonValue || token is JsonObject)
+
+                // Handle scalar tokens
+                if (token is JsonValue jv)
                 {
                     if (type == typeof(TimeUuid))
                     {
-                        // TimeUuid is not Serializable but convertible from Uuid
+                        return (TimeUuid)jv.Deserialize<Guid>(SerializerOptions);
+                    }
+                    if (type == typeof(string))
+                    {
+                        return jv.ToString();
+                    }
+                    if (type == typeof(BigInteger))
+                    {
+                        if (jv.TryGetValue<long>(out var longVal))
+                        {
+                            return new BigInteger(longVal);
+                        }
+                        return BigInteger.Parse(jv.ToString());
+                    }
+
+                    // Try parsing geometry and other types from string value
+                    if (jv.TryGetValue<string>(out var strVal))
+                    {
+                        var parsed = TryParseFromString(strVal, type);
+                        if (parsed != null)
+                        {
+                            return parsed;
+                        }
+                    }
+
+                    return jv.Deserialize(type, SerializerOptions);
+                }
+
+                if (token is JsonObject)
+                {
+                    if (type == typeof(TimeUuid))
+                    {
                         return (TimeUuid)token.Deserialize<Guid>(SerializerOptions);
                     }
                     return token.Deserialize(type, SerializerOptions);
                 }
+
                 if (token is JsonArray)
                 {
                     Type elementType = null;
@@ -184,11 +219,49 @@ namespace Cassandra.Serialization.Graph.GraphSON1
                     return ToArray((JsonArray)token, elementType);
                 }
             }
+            catch (JsonException ex) when (IsTypeMismatch(token, type))
+            {
+                throw new InvalidOperationException(
+                    $"Cannot convert {token.GetType().Name} to {type.Name}", ex);
+            }
             catch (JsonException ex)
             {
                 throw new NotSupportedException($"Type {type} is not supported", ex);
             }
             throw new NotSupportedException($"Token of type {token.GetType()} is not supported");
+        }
+
+        private static bool IsTypeMismatch(JsonNode token, Type type)
+        {
+            // Scalar token trying to convert to a complex graph type
+            if (token is JsonValue)
+            {
+                return type == typeof(Vertex) || type == typeof(Edge) || type == typeof(Path)
+                    || type == typeof(IVertex) || type == typeof(IEdge) || type == typeof(IPath);
+            }
+            // Object tree trying to convert to a simple scalar type
+            if (token is JsonObject)
+            {
+                return type.IsPrimitive || type == typeof(decimal) || type == typeof(string);
+            }
+            return false;
+        }
+
+        private static object TryParseFromString(string value, Type type)
+        {
+            if (type == typeof(Cassandra.Geometry.Point))
+            {
+                return Cassandra.Geometry.Point.Parse(value);
+            }
+            if (type == typeof(Cassandra.Geometry.LineString))
+            {
+                return Cassandra.Geometry.LineString.Parse(value);
+            }
+            if (type == typeof(Cassandra.Geometry.Polygon))
+            {
+                return Cassandra.Geometry.Polygon.Parse(value);
+            }
+            return null;
         }
 
         /// <summary>
@@ -349,7 +422,22 @@ namespace Cassandra.Serialization.Graph.GraphSON1
         {
             if (_token is JsonValue val)
             {
+                // For booleans, use JSON representation (lowercase true/false)
+                if (val.TryGetValue<bool>(out _))
+                {
+                    return val.ToJsonString();
+                }
+                // For strings, return the raw string value without quotes
+                if (val.TryGetValue<string>(out var s))
+                {
+                    return s;
+                }
                 return val.ToString();
+            }
+
+            if (_token is JsonArray)
+            {
+                return _token.ToJsonString(new JsonSerializerOptions { WriteIndented = true });
             }
 
             return _token?.ToJsonString() ?? string.Empty;

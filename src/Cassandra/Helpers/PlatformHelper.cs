@@ -43,7 +43,10 @@ namespace Cassandra.Helpers
 #elif NETSTANDARD2_0
             return ".NET Standard 2.0";
 #else
-            return null;
+            var framework = Assembly.GetExecutingAssembly()
+                .GetCustomAttribute<System.Runtime.Versioning.TargetFrameworkAttribute>()?
+                .FrameworkDisplayName;
+            return framework;
 #endif
         }
 
