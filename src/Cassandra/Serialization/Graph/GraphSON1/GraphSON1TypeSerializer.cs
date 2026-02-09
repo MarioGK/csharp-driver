@@ -14,9 +14,9 @@
 //    limitations under the License.
 
 using System;
-using Cassandra.DataStax.Graph;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using Cassandra.DataStax.Graph;
 
 namespace Cassandra.Serialization.Graph.GraphSON1
 {
@@ -52,7 +52,7 @@ namespace Cassandra.Serialization.Graph.GraphSON1
 
         public string ToDb(object obj)
         {
-            return JsonConvert.SerializeObject(obj, GraphSON1ContractResolver.Settings);
+            return JsonSerializer.Serialize(obj, GraphSON1ContractResolver.Options);
         }
 
         public bool ConvertFromDb(object obj, Type targetType, out dynamic result)
